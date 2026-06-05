@@ -128,3 +128,9 @@ host     = "[ARG] Counter-Strike 1.6 Server +Bots"
 address  = "5.196.165.2:27015"
 protocol = 49
 host     = "OLD SCHOOL CS"
+
+[[server]]
+address  = "131.196.196.196:27020"
+protocol = 48
+contact  = "tobiascarlossoares@gmail.com, discord:yukihira9319"
+host     = "Fantasy Gaming | Zombie Escape | FreeVIP+CSO+Events"
