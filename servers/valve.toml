@@ -13,6 +13,7 @@ host     = "[Lemita]:: HLDM (t.me/lemita_project)"
 [[server]]
 address  = "77.239.121.202:27015"
 protocol = 49
+contact  = "nikolaeve10@gmail.com, telegram: elinsrc"
 host     = "[Half-Life Collective] Updated DM"
 
 [[server]]
