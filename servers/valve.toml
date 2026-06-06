@@ -40,10 +40,12 @@ host     = "Half-Life"
 
 [[server]]
 address  = "45.154.199.157:27015"
+contact  = "eks+hl1@eclp.top"
 protocol = 49
 host     = "[Eclipse] LemonParty"
 
 [[server]]
 address  = "45.154.199.157:27016"
+contact  = "eks+hl1@eclp.top"
 protocol = 49
 host     = "[Eclipse] 357 Madness"
