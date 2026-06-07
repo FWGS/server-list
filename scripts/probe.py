@@ -81,11 +81,12 @@ def write_output(output_dir, gamedir, addresses):
 	out_path.write_text("\n".join(lines))
 	return out_path
 
-def heatmap_svg(gamedirs, grid, col_labels, cell_w):
+def heatmap_svg(gamedirs, grid, col_labels, total_w):
 	cell_h = 30
 	label_w = 90
 	cols = len(col_labels)
-	width = label_w + cols * cell_w
+	cell_w = (total_w - label_w) / cols
+	width = total_w
 	height = (len(gamedirs) + 1) * cell_h
 
 	all_vals = [v for row in grid.values() for v in row if v is not None]
@@ -114,20 +115,21 @@ def heatmap_svg(gamedirs, grid, col_labels, cell_w):
 			return str(int(v))
 		return f"{v:.1f}"
 
-	parts = [f'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 {width} {height}" width="100%" style="max-width:{width}px" font-family="system-ui,sans-serif" font-size="11">']
+	parts = [f'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 {width:g} {height}" width="100%" style="max-width:{width:g}px" font-family="system-ui,sans-serif" font-size="11">']
 	for i, lbl in enumerate(col_labels):
-		x = label_w + i * cell_w + cell_w // 2
-		parts.append(f'<text x="{x}" y="{cell_h // 2 + 4}" text-anchor="middle" fill="#6b7280">{html.escape(lbl)}</text>')
+		x = label_w + (i + 0.5) * cell_w
+		parts.append(f'<text x="{x:g}" y="{cell_h // 2 + 4}" text-anchor="middle" fill="#6b7280">{html.escape(lbl)}</text>')
 	for ri, gd in enumerate(gamedirs):
 		y = (ri + 1) * cell_h
 		parts.append(f'<text x="{label_w - 8}" y="{y + cell_h // 2 + 4}" text-anchor="end" fill="#1f2937">{html.escape(gd)}</text>')
 		for ci, lbl in enumerate(col_labels):
 			v = grid[gd][ci]
 			x = label_w + ci * cell_w
-			parts.append(f'<rect x="{x}" y="{y}" width="{cell_w - 1}" height="{cell_h - 1}" fill="{color(v)}"><title>{html.escape(gd)} {html.escape(lbl)}: {fmt(v) or "no samples"}</title></rect>')
+			parts.append(f'<rect x="{x:g}" y="{y}" width="{cell_w - 1:g}" height="{cell_h - 1}" fill="{color(v)}"><title>{html.escape(gd)} {html.escape(lbl)}: {fmt(v) or "no samples"}</title></rect>')
 			label = fmt(v)
 			if label:
-				parts.append(f'<text x="{x + cell_w // 2}" y="{y + cell_h // 2 + 4}" text-anchor="middle" fill="{text_color(v)}">{label}</text>')
+				cx = label_w + (ci + 0.5) * cell_w
+				parts.append(f'<text x="{cx:g}" y="{y + cell_h // 2 + 4}" text-anchor="middle" fill="{text_color(v)}">{label}</text>')
 	parts.append('</svg>')
 	return "\n".join(parts)
 
@@ -152,8 +154,9 @@ def write_index(output_dir, sources, samples, now):
 		hour_grid[gd] = [statistics.median(b) if b else None for b in hb]
 		wday_grid[gd] = [statistics.median(b) if b else None for b in wb]
 
-	hour_svg = heatmap_svg(gamedirs, hour_grid, [f"{h:02d}" for h in range(24)], cell_w=36)
-	wday_svg = heatmap_svg(gamedirs, wday_grid, ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"], cell_w=72)
+	chart_w = 90 + 24 * 36
+	hour_svg = heatmap_svg(gamedirs, hour_grid, [f"{h:02d}" for h in range(24)], chart_w)
+	wday_svg = heatmap_svg(gamedirs, wday_grid, ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"], chart_w)
 
 	gen_iso = now.replace(microsecond=0).isoformat()
 	server_links = "\n".join(

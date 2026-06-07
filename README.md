@@ -74,24 +74,6 @@ to maintainers but never to end users.
   rather than spreading them across many. It makes review and future contact
   easier.
 
-## Published URLs
-
-In repository Settings, set Pages source to **Deploy from a branch**, branch
-`gh-pages`, folder `/` (root). The workflow force-pushes a single-commit
-orphan branch on every run, so the branch never accumulates history.
-
-The lists are served at:
-
-```
-https://fwgs.github.io/server-list/v1/servers/<gamedir>
-```
-
-Engines configure this through `xashcomm.lst`:
-
-```
-masterstatic https://fwgs.github.io/server-list/v1/servers/%g
-```
-
 ## Liveness, retries, and grace
 
 Each source address is queried up to `--tries` times (default 4) with a
