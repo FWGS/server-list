@@ -81,6 +81,23 @@ def write_output(output_dir, gamedir, addresses):
 	out_path.write_text("\n".join(lines))
 	return out_path
 
+def write_gamedirs(output_dir, gamedirs):
+	out_dir = output_dir / "v1"
+	out_dir.mkdir(parents=True, exist_ok=True)
+	out_path = out_dir / "gamedirs"
+
+	lines = [
+		"# gamedir list",
+		f"# Generated {time.strftime('%Y-%m-%d %H:%M:%S UTC', time.gmtime())}",
+		"# Format: <gamedir> <total_server_count> <live_server_count>",
+		"",
+	]
+	for gamedir, count, live in gamedirs:
+		lines.append(f"{gamedir} {count} {live}")
+	lines.append("")
+	out_path.write_text("\n".join(lines))
+	return out_path
+
 def heatmap_svg(gamedirs, grid, col_labels, total_w):
 	cell_h = 30
 	label_w = 90
@@ -259,6 +276,7 @@ def main():
 	samples = state.setdefault("samples", {})
 	now_ts = int(now.timestamp())
 
+	gamedirs = []
 	for gamedir, entries in sources.items():
 		gd_state = state.setdefault(gamedir, {})
 		live_addrs = []
@@ -297,6 +315,8 @@ def main():
 			else:
 				print(f"  [-] {gamedir:>12}  {address}", flush=True)
 
+		gamedirs.append([gamedir, len(entries), len(live_addrs)])
+
 		# always emit a file so the URL is reachable even when 0 servers respond
 		live_addrs.sort()
 		out_path = write_output(output_dir, gamedir, live_addrs)
@@ -304,6 +324,9 @@ def main():
 
 		if gd_responding > 0:
 			samples.setdefault(gamedir, []).append([now_ts, gd_players])
+
+	out_path = write_gamedirs(output_dir, gamedirs)
+	print(f"  -> {out_path}", flush=True)
 
 	source_addrs = {gd: {e["address"] for e in entries if e.get("address")} for gd, entries in sources.items()}
 	pruned = 0
