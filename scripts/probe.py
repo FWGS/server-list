@@ -6,6 +6,7 @@
 import argparse
 import html
 import json
+import random
 import statistics
 import subprocess
 import sys
@@ -16,40 +17,45 @@ from pathlib import Path
 
 PROTO_XASH = 49
 PROTO_GOLDSRC = 48
-LIVE_STATUSES = ("ok", "okwithplayers")
-BACKOFF = (0.25, 1.0, 2.0, 4.0, 4.0)
+BATCH_SIZE = 5
 STATE_PRUNE_HOURS = 30 * 24
 HOUR_WINDOW_HOURS = 14 * 24
 WEEKDAY_WINDOW_HOURS = 6 * 7 * 24
 SAMPLE_RETAIN_HOURS = WEEKDAY_WINDOW_HOURS
 
-def probe_one(query_bin, address, timeout):
-	cmd = [query_bin, "info", address, "-j", "-c", "-P", "-t", str(int(timeout))]
+def probe_batch(query_bin, addresses, timeout):
+	# use one query invocation for multiple addresses
+	cmd = [query_bin, "info", *addresses, "-j", "-c", "-P", "-t", str(int(timeout))]
 
 	try:
 		out = subprocess.run(cmd, capture_output=True, text=True, timeout=timeout + 5)
 	except subprocess.TimeoutExpired:
-		return None
+		return {}
 
 	if not out.stdout.strip():
-		return None
+		return {}
 
 	try:
 		doc = json.loads(out.stdout)
 	except json.JSONDecodeError:
-		return None
+		return {}
 
-	servers = doc.get("servers") or []
-	return servers[0] if servers else None
+	live = {}
+	for server in doc.get("servers") or []:
+		address = server.get("address")
+		if address and server.get("status") == "ok":
+			live[address] = server
+	return live
 
-def probe_with_retry(query_bin, address, tries, timeout):
-	for i in range(tries):
-		result = probe_one(query_bin, address, timeout)
-		if result is not None and result.get("status") in LIVE_STATUSES:
-			return result
-		if i + 1 < tries:
-			time.sleep(BACKOFF[min(i, len(BACKOFF) - 1)])
-	return None
+def probe_all(query_bin, addresses, timeout):
+	# probe every address in shuffled batches
+	pending = list(addresses)
+	random.shuffle(pending)
+	results = {}
+	for start in range(0, len(pending), BATCH_SIZE):
+		batch = pending[start:start + BATCH_SIZE]
+		results.update(probe_batch(query_bin, batch, timeout))
+	return results
 
 def load_sources(servers_dir):
 	sources = {}
@@ -77,6 +83,23 @@ def write_output(output_dir, gamedir, addresses):
 	for addr, proto in addresses:
 		directive = "gs" if proto == PROTO_GOLDSRC else "ip"
 		lines.append(f"{directive} {addr}")
+	lines.append("")
+	out_path.write_text("\n".join(lines))
+	return out_path
+
+def write_gamedirs(output_dir, gamedirs):
+	out_dir = output_dir / "v1"
+	out_dir.mkdir(parents=True, exist_ok=True)
+	out_path = out_dir / "gamedirs"
+
+	lines = [
+		"# gamedir list",
+		f"# Generated {time.strftime('%Y-%m-%d %H:%M:%S UTC', time.gmtime())}",
+		"# Format: <gamedir> <total_server_count> <live_server_count>",
+		"",
+	]
+	for gamedir, count, live in gamedirs:
+		lines.append(f"{gamedir} {count} {live}")
 	lines.append("")
 	out_path.write_text("\n".join(lines))
 	return out_path
@@ -229,8 +252,7 @@ def main():
 	ap.add_argument("--query", default="xash3d-query", help="path to the xash3d-query binary")
 	ap.add_argument("--sources", default="servers", help="directory containing per-gamedir TOML sources")
 	ap.add_argument("--output", default="output", help="directory to write the publishable tree into")
-	ap.add_argument("--tries", type=int, default=4, help="probe attempts per server")
-	ap.add_argument("--timeout", type=int, default=2, help="per-probe response timeout, in whole seconds (passed to xash3d-query -t)")
+	ap.add_argument("--timeout", type=int, default=6, help="retry window in whole seconds (passed to xash3d-query -t); it re-sends every 2s for this long")
 	ap.add_argument("--grace-hours", type=float, default=48.0, help="keep a silent server published if it responded within this many hours")
 	args = ap.parse_args()
 
@@ -254,11 +276,15 @@ def main():
 	total = sum(len(v) for v in sources.values())
 	live_now = 0
 	grace_kept = 0
-	print(f"probing {total} servers across {len(sources)} gamedirs  (tries={args.tries}, timeout={args.timeout}s, grace={args.grace_hours}h)", flush=True)
+	print(f"probing {total} servers across {len(sources)} gamedirs  (timeout={args.timeout}s, grace={args.grace_hours}h)", flush=True)
 
 	samples = state.setdefault("samples", {})
 	now_ts = int(now.timestamp())
 
+	all_addrs = sorted({e["address"] for entries in sources.values() for e in entries if e.get("address")})
+	results = probe_all(args.query, all_addrs, args.timeout)
+
+	gamedirs = []
 	for gamedir, entries in sources.items():
 		gd_state = state.setdefault(gamedir, {})
 		live_addrs = []
@@ -272,7 +298,7 @@ def main():
 			proto = int(entry.get("protocol") or PROTO_XASH)
 			prev = gd_state.setdefault(address, {})
 
-			result = probe_with_retry(args.query, address, args.tries, args.timeout)
+			result = results.get(address)
 
 			prev["last_attempt"] = now_iso
 			if result is not None:
@@ -288,7 +314,10 @@ def main():
 				continue
 
 			age = hours_since(prev.get("last_seen"), now)
-			if age <= args.grace_hours:
+			if entry.get("force"):
+				live_addrs.append((address, proto))
+				print(f"  [F] {gamedir:>12}  {address}  silent now, published anyway (force)", flush=True)
+			elif age <= args.grace_hours:
 				live_addrs.append((address, proto))
 				grace_kept += 1
 				print(f"  [~] {gamedir:>12}  {address}  silent now, last seen {age:.1f}h ago (grace)", flush=True)
@@ -297,6 +326,8 @@ def main():
 			else:
 				print(f"  [-] {gamedir:>12}  {address}", flush=True)
 
+		gamedirs.append([gamedir, len(entries), len(live_addrs)])
+
 		# always emit a file so the URL is reachable even when 0 servers respond
 		live_addrs.sort()
 		out_path = write_output(output_dir, gamedir, live_addrs)
@@ -304,6 +335,9 @@ def main():
 
 		if gd_responding > 0:
 			samples.setdefault(gamedir, []).append([now_ts, gd_players])
+
+	out_path = write_gamedirs(output_dir, gamedirs)
+	print(f"  -> {out_path}", flush=True)
 
 	source_addrs = {gd: {e["address"] for e in entries if e.get("address")} for gd, entries in sources.items()}
 	pruned = 0

@@ -108,20 +108,10 @@ host     = "^3GM ^1Zombie ^2Meat ^55.0 ^6| Free Hook,VIP Qqun:622456398"
 
 
 # Added on 2026-06-06 from a follow-up master dump
-
-[[server]]
-address  = "113.30.190.137:27015"
-protocol = 49
-host     = "[TR] CSDM Deathmatch | t.me/nash3dxash"
-
-[[server]]
-address  = "113.30.190.137:27031"
-protocol = 49
-host     = "[TR] CSDM Deathmatch | t.me/nash3dxash"
-
 [[server]]
 address  = "186.19.63.56:27015"
 protocol = 49
+contact  = "vladimiro75@gmail.com"
 host     = "[ARG] Counter-Strike 1.6 Server +Bots"
 
 [[server]]
@@ -140,8 +130,3 @@ address  = "168.222.251.98:6610"
 protocol = 48
 contact  = "tilinasowaza5@gmail.com"
 host     = "Zombie Plague 4.3 Peru"
-[[server]]
-address  = "168.222.251.98:4728"
-protocol = 48
-contact  = "tilinasowaza5@gmail.com"
-host     = "Zombie Escape"
