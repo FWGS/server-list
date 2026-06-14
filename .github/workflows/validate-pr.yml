@@ -57,8 +57,7 @@ jobs:
             --query "$PWD/.xash3d-master/xash3d-query" \
             --sources servers \
             --probe-script scripts/probe.py \
-            --tries 3 \
-            --timeout 2 \
+            --timeout 6 \
             --out report.md
           echo '--- report.md ---'
           cat report.md

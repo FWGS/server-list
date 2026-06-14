@@ -56,8 +56,7 @@ def main():
 	ap.add_argument("--query", required=True, help="path to xash3d-query")
 	ap.add_argument("--sources", default="servers")
 	ap.add_argument("--probe-script", default="scripts/probe.py")
-	ap.add_argument("--tries", type=int, default=3)
-	ap.add_argument("--timeout", type=int, default=2)
+	ap.add_argument("--timeout", type=int, default=6)
 	ap.add_argument("--out", default="-", help="output file; - for stdout")
 	args = ap.parse_args()
 
@@ -104,6 +103,8 @@ def main():
 
 		probe = import_probe(args.probe_script)
 
+		results = probe.probe_all(args.query, [e["address"] for _, e in new_entries], args.timeout)
+
 		n = len(new_entries)
 		lines.append(f"Probed {n} new entr{'y' if n == 1 else 'ies'}.")
 		lines.append("")
@@ -118,7 +119,7 @@ def main():
 			except (TypeError, ValueError):
 				claimed_int = None
 
-			result = probe.probe_with_retry(args.query, addr, args.tries, args.timeout)
+			result = results.get(addr)
 			probed.append((g, addr, e, claimed_int, result))
 
 			claimed_cell = f"{claimed_int} ({PROTO_NAMES[claimed_int]})" if claimed_int in PROTO_NAMES else f"`{claimed}` :x:"
