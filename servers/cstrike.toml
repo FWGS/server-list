@@ -136,3 +136,9 @@ address  = "168.222.251.98:4728"
 protocol = 48
 contact  = "dark17780@gmail.com"
 host     = "Zombie Escape"
+
+[[server]]
+address = "193.111.78.158:27015"
+protocol = 49
+contact = "barkinayaz9@gmail.com"
+host = "[AYZ]Zombie Escape Reborn"
