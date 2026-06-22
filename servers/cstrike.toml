@@ -116,7 +116,8 @@ host     = "[ARG] Counter-Strike 1.6 Server +Bots"
 
 [[server]]
 address  = "5.196.165.2:27015"
-protocol = 49
+protocol = 48
+contact  = "t.me/czarintax"
 host     = "OLD SCHOOL CS"
 
 [[server]]
