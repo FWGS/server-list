@@ -1,12 +1,12 @@
 # Auto-populated on 2026-06-05 from old UDP master snapshots
 
 [[server]]
-address  = "106.13.232.83:27015"
+address  = "222.187.254.125:23016"
 protocol = 49
 host     = "[XXH] Zombie Crisis"
 
 [[server]]
-address  = "106.13.232.83:27016"
+address  = "222.187.254.125:23015"
 protocol = 49
 host     = "[XXH] CSDM:FFA Qqun:434673380"
 
