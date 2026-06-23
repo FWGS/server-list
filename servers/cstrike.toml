@@ -3,11 +3,13 @@
 [[server]]
 address  = "222.187.254.125:23015"
 protocol = 49
+contact  = "1033341124@qq.com"
 host     = "[XXH] Zombie Crisis"
 
 [[server]]
 address  = "222.187.254.125:23016"
 protocol = 49
+contact  = "1033341124@qq.com"
 host     = "[XXH] CSDM:FFA Qqun:434673380"
 
 [[server]]
