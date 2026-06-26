@@ -145,3 +145,9 @@ address = "193.111.78.158:27015"
 protocol = 49
 contact = "barkinayaz9@gmail.com"
 host = "[AYZ]Zombie Escape Reborn"
+
+[[server]]
+address  = "89.221.220.61:27017"
+contact  = "info@goldsrc.one"
+protocol = 48
+host     = "[GoldSrc.one] CrossPlay (register at discord.goldsrc.one)"
