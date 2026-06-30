@@ -1,13 +1,15 @@
 # Auto-populated on 2026-06-05 from old UDP master snapshots
 
 [[server]]
-address  = "106.13.232.83:27015"
+address  = "222.187.254.125:23015"
 protocol = 49
+contact  = "1033341124@qq.com"
 host     = "[XXH] Zombie Crisis"
 
 [[server]]
-address  = "106.13.232.83:27016"
+address  = "222.187.254.125:23016"
 protocol = 49
+contact  = "1033341124@qq.com"
 host     = "[XXH] CSDM:FFA Qqun:434673380"
 
 [[server]]
@@ -143,3 +145,9 @@ address = "193.111.78.158:27015"
 protocol = 49
 contact = "barkinayaz9@gmail.com"
 host = "[AYZ]Zombie Escape Reborn"
+
+[[server]]
+address  = "89.221.220.61:27017"
+contact  = "info@goldsrc.one"
+protocol = 48
+host     = "[GoldSrc.one] CrossPlay (register at discord.goldsrc.one)"
