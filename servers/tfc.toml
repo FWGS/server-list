@@ -1,9 +1,7 @@
-# Auto-populated on 2026-06-05 from old UDP master snapshots
-
 [[server]]
-address  = "135.181.160.44:27018"
+address  = "ganymede.workbench.network:27018"
 protocol = 49
-host     = "TFC 1.5 | Europe"
+contact  = "contact@workbench.network"
 
 [[server]]
 address  = "89.221.220.61:27021"
