@@ -304,13 +304,18 @@ def main():
 			if result is not None:
 				prev["last_seen"] = now_iso
 				prev["last_ping_ms"] = result.get("ping")
+				# a1ba: we publish the IP, not the hostname
+				# until engine uses blocking NET_StringToAdr
+				# which is entirely my bug, lol
+				pub = result.get("resolved") or address
 				# use the source's protocol, not the responder's
-				live_addrs.append((address, proto))
+				live_addrs.append((pub, proto))
 				live_now += 1
 				numcl = int(result.get("numcl") or 0)
 				gd_players += numcl
 				gd_responding += 1
-				print(f"  [+] {gamedir:>12}  {address}  ping={result.get('ping')}ms  players={numcl}", flush=True)
+				seen = f"{address} -> {pub}" if pub != address else address
+				print(f"  [+] {gamedir:>12}  {seen}  ping={result.get('ping')}ms  players={numcl}", flush=True)
 				continue
 
 			age = hours_since(prev.get("last_seen"), now)

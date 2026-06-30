@@ -143,6 +143,10 @@ def main():
 			else:
 				note = f":warning: unexpected responder protocol {got}." + gd_note
 
+			resolved = result.get("resolved")
+			if resolved and resolved != addr:
+				note += f" Resolves to `{md_escape(resolved)}`, published as IP."
+
 			lines.append(f"| `{g}` | `{addr}` | {claimed_cell} | {got_cell} | `{host}` | {note} |")
 
 		if truncated:
