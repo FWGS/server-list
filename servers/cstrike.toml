@@ -151,3 +151,9 @@ address  = "89.221.220.61:27017"
 contact  = "info@goldsrc.one"
 protocol = 48
 host     = "[GoldSrc.one] CrossPlay (register at discord.goldsrc.one)"
+
+[[server]]
+address  = "131.196.196.196:27196"
+protocol = 48
+contact  = "matheus.rondine@terra.com.br"
+host     = "zS.TeaM"
