@@ -153,6 +153,12 @@ protocol = 48
 host     = "[GoldSrc.one] CrossPlay (register at discord.goldsrc.one)"
 
 [[server]]
+address = "104.234.65.245:27300"
+protocol = 48 
+contact = "csnightkillers@gmail.com, discord:gelado710_, discord:hevy7229"
+host = "[NIGHT KILLERS] | ZOMBIE PLAGUE | XP-LEVEL-FPS"
+
+[[server]]
 address  = "131.196.196.196:27196"
 protocol = 48
 contact  = "matheus.rondine@terra.com.br"
