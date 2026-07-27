@@ -163,3 +163,8 @@ address  = "131.196.196.196:27196"
 protocol = 48
 contact  = "matheus.rondine@terra.com.br"
 host     = "zS.TeaM"
+
+[[server]]
+address = "101.200.51.52:27015"
+protocol = 49
+host = "[CN-G8] Public Q群:704956968"
