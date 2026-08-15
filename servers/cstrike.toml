@@ -163,3 +163,9 @@ address  = "131.196.199.248:27015"
 protocol = 48
 contact  = "matheus.rondine@terra.com.br"
 host     = "zS.TeaM"
+
+[[server]]
+address  = "9950x.mc5173.cn:27018"
+protocol = 48
+contact  = "1041936439@qq.com"
+host     = "Zombie Nightmare v1.0"
