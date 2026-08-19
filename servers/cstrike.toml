@@ -163,3 +163,9 @@ address  = "131.196.199.248:27015"
 protocol = 48
 contact  = "matheus.rondine@terra.com.br"
 host     = "zS.TeaM"
+
+[[server]]
+address = "178.63.182.108:5606"
+protocol = 48
+contact = "nsabkelkiyed@gmail.com"
+host = "Zombie Biohazard 6.3 [FREE VIP] + [Level Bank]"
