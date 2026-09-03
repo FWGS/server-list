@@ -178,6 +178,6 @@ host     = "Zombie Nightmare v1.0"
 
 [[server]]
 address  = "132.243.253.240:2253"
-protocol = 49
+protocol = 48
 contact  = "rimage2024@gmail.com"
 host   = "the liche family | Zombie escape "
