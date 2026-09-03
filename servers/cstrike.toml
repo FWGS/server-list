@@ -175,3 +175,9 @@ address  = "9950x.mc5173.cn:27018"
 protocol = 48
 contact  = "1041936439@qq.com"
 host     = "Zombie Nightmare v1.0"
+
+[[server]]
+address  = "94.41.188.47:27015"
+protocol = 49
+contact  = "sidreshot@gmail.com"
+host     = "ARMADA CSDM [Xash] | Deathmatch + Bots"
