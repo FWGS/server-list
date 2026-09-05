@@ -53,3 +53,11 @@ address  = "89.221.220.61:27016"
 contact  = "info@goldsrc.one"
 protocol = 48
 host     = "[GoldSrc.one] CrossPlay (register at discord.goldsrc.one)"
+
+# Adding Disco_Wookie DM 2026-09-04
+
+[[server]]
+address  = "72.34.103.90:27015"
+protocol = 49
+host     = "Disco_Wookie DM"
+contact  = "ajpcinc@gmail.com"
