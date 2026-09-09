@@ -129,6 +129,12 @@ contact  = "tobiascarlossoares@gmail.com, discord:yukihira9319"
 host     = "Fantasy Gaming | Zombie Escape | FreeVIP+CSO+Events"
 
 [[server]]
+address  = "136.110.10.31:27015"
+protocol = 48
+contact  = "t.me/moha_kun , discord: mohmemes.dz"
+host     = "CloverXD | Zombie Escape Mod [ViP | XP | CSO]"
+
+[[server]]
 address  = "168.222.251.98:6610"
 protocol = 48
 contact  = "tilinasowaza5@gmail.com"
@@ -181,3 +187,9 @@ address  = "91.151.88.240:27015"
 protocol = 49
 contact  = "satinthebox@gmail.com"
 host   = "Dark Professional | Zombie Escape Updated! | FreeVIP+BOSS+Event"
+
+[[server]]
+address  = "132.243.253.240:2253"
+protocol = 48
+contact  = "rimage2024@gmail.com"
+host   = "the liche family | Zombie escape "
