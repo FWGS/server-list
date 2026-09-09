@@ -181,3 +181,9 @@ address  = "94.41.188.47:27015"
 protocol = 49
 contact  = "sidreshot@gmail.com"
 host     = "ARMADA CSDM [Xash] | Deathmatch + Bots"
+
+[[server]]
+address  = "132.243.253.240:2253"
+protocol = 48
+contact  = "rimage2024@gmail.com"
+host   = "the liche family | Zombie escape "
