@@ -129,6 +129,12 @@ contact  = "tobiascarlossoares@gmail.com, discord:yukihira9319"
 host     = "Fantasy Gaming | Zombie Escape | FreeVIP+CSO+Events"
 
 [[server]]
+address  = "136.110.10.31:27015"
+protocol = 48
+contact  = "t.me/moha_kun , discord: mohmemes.dz"
+host     = "CloverXD | Zombie Escape Mod [ViP | XP | CSO]"
+
+[[server]]
 address  = "168.222.251.98:6610"
 protocol = 48
 contact  = "tilinasowaza5@gmail.com"
