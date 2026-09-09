@@ -184,7 +184,7 @@ host     = "Zombie Nightmare v1.0"
 
 [[server]]
 address  = "91.151.88.240:27015"
-protocol = 49
+protocol = 48
 contact  = "satinthebox@gmail.com"
 host   = "Dark Professional | Zombie Escape Updated! | FreeVIP+BOSS+Event"
 
