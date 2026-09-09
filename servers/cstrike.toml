@@ -175,3 +175,9 @@ address  = "9950x.mc5173.cn:27018"
 protocol = 48
 contact  = "1041936439@qq.com"
 host     = "Zombie Nightmare v1.0"
+
+[[server]]
+address  = "132.243.253.240:2253"
+protocol = 48
+contact  = "rimage2024@gmail.com"
+host   = "the liche family | Zombie escape "
