@@ -1,11 +1,18 @@
 name: Probe and publish
 
 on:
-  schedule:
-    - cron: "*/5 * * * *"
   push:
     branches: [master, main]
   workflow_dispatch:
+    inputs:
+      runner:
+        description: >-
+          Runner label to probe from. Blacksmith's network reaches servers that GitHub's cannot, so a script sends a run there periodically to keep those entries inside the grace window.
+        type: choice
+        default: ubuntu-slim
+        options:
+          - ubuntu-slim
+          - blacksmith-2vcpu-ubuntu-2404-arm
 
 # Serialize runs; never cancel an in-flight probe (the last writer wins).
 concurrency:
@@ -17,8 +24,9 @@ permissions:
 
 jobs:
   publish:
-    # slim has everything we need and more, and it's super fast to setup
-    runs-on: ubuntu-slim
+    # slim has everything we need and more, and it's super fast to setup.
+    # Anything but a dispatch that says otherwise runs on GitHub.
+    runs-on: ${{ github.event.inputs.runner || 'ubuntu-slim' }}
     steps:
       - uses: actions/checkout@v6
 
@@ -27,11 +35,16 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         run: |
           set -euo pipefail
+          case "$(uname -m)" in
+            x86_64)  target=x86_64-unknown-linux-gnu ;;
+            aarch64) target=aarch64-unknown-linux-gnu ;;
+            *) echo "::error::no xash3d-query build for $(uname -m)"; exit 1 ;;
+          esac
           mkdir -p .xash3d-master
           cd .xash3d-master
           gh release download continuous \
             --repo FWGS/xash3d-master \
-            --pattern '*x86_64-unknown-linux-gnu*'
+            --pattern "*${target}*"
           tar --use-compress-program=unzstd -xf xash3d-master-*.tar.zst
           chmod +x xash3d-query
           ./xash3d-query --version
