@@ -58,6 +58,14 @@ jobs:
             || echo '{}' > output/state.json
 
       - name: Probe servers
+        env:
+          # a hack to contribute to samples only from blacksmith's VMs which can reach most of servers that GitHub VMs can't
+          #
+          # written as `!= ... && '--no-samples' || ''` on purpose: in an Actions expression `a && '' || b` always yields b, because the
+          # empty string is falsy, so the non-empty branch has to be first
+          SAMPLES: >-
+            ${{ github.event.inputs.runner != 'blacksmith-2vcpu-ubuntu-2404-arm'
+                && '--no-samples' || '' }}
         run: |
           set -o pipefail
           ./scripts/probe.py \
@@ -65,6 +73,7 @@ jobs:
             --sources ./servers \
             --output ./output \
             --grace-hours 48 \
+            $SAMPLES \
             2>&1 | tee ./output/probe.log
 
       - name: Force-push to gh-pages

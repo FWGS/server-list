@@ -461,6 +461,7 @@ def main():
 	ap.add_argument("--output", default="output", help="directory to write the publishable tree into")
 	ap.add_argument("--timeout", type=int, default=6, help="retry window in whole seconds (passed to xash3d-query -t); it re-sends every 2s for this long")
 	ap.add_argument("--grace-hours", type=float, default=48.0, help="keep a silent server published if it responded within this many hours")
+	ap.add_argument("--no-samples", action="store_true", help="probe and publish as usual, but do not record player-count samples. Pass this from any runner that cannot reach the whole list.")
 	args = ap.parse_args()
 
 	sources_dir = Path(args.sources)
@@ -502,7 +503,7 @@ def main():
 		out_path = write_output(output_dir, gamedir, live_addrs)
 		print(f"  -> {out_path}  ({len(live_addrs)} published)", flush=True)
 
-		if responding > 0:
+		if responding > 0 and not args.no_samples:
 			samples.setdefault(gamedir, []).append([now_ts, players])
 
 	out_path = write_gamedirs(output_dir, gamedirs)
