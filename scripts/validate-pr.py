@@ -199,51 +199,84 @@ def duplicate_lines(head_dupes, base_dupes):
 	lines.append("")
 	return lines
 
-def result_cells(candidate, result, rejection=None):
-	"""The responder, host and notes cells for one probed entry."""
+def entry_fault(candidate, result, rejection=None):
+	"""What disqualifies this entry from being merged, or None if nothing does.
+
+	Returns (short label for the summary, note for the table).
+	"""
 	if rejection:
-		return "—", "—", f":x: {rejection}; not probed — see below."
+		return "not publicly routable", f":x: {rejection}; not probed — see below."
 
 	if candidate.protocol is None:
-		return "—", "—", ":x: unusable `protocol`, not probed — see below."
+		return "unknown protocol", ":x: unusable `protocol`, not probed — see below."
 
 	# probe.py queries each entry on its declared protocol only, and reports
 	# an answer on any other protocol as a non-response
 	wrong = result.get("wrong_protocol") if result else None
 	if wrong is not None:
-		return protocol_cell(wrong), "—", (
+		return "wrong protocol", (
 			f":x: no answer on protocol {candidate.protocol}; it answered on {wrong} "
 			"instead. Fix `protocol`, or the server, so they agree — it will not be "
 			"published as-is.")
 
 	if result is None:
-		return "—", "—", ":x: no response — server unreachable; will not be published until it answers"
+		return "unreachable", ":x: no response — server unreachable; will not be published until it answers"
 
-	note = ":white_check_mark: answered on the declared protocol."
 	gamedir = result.get("gamedir") or ""
 	if gamedir != candidate.gamedir:
-		note += f" responder gamedir: `{md_escape(gamedir)}`."
+		return "wrong gamedir", (
+			f":x: the server reports gamedir `{md_escape(gamedir)}` but this entry is in "
+			f"`{candidate.gamedir}.toml`. It would be published to the wrong list — move it "
+			f"to `{md_escape(gamedir)}.toml`.")
 
+	return None, None
+
+def result_cells(candidate, result, rejection=None):
+	"""The responder, host and notes cells for one probed entry."""
+	_, fault_note = entry_fault(candidate, result, rejection)
+
+	if rejection or candidate.protocol is None:
+		return "—", "—", fault_note
+
+	wrong = result.get("wrong_protocol") if result else None
+	if wrong is not None:
+		return protocol_cell(wrong), "—", fault_note
+	if result is None:
+		return "—", "—", fault_note
+
+	host = f"`{md_escape(result.get('host') or '')}`"
+	if fault_note:  # answered, but from the wrong gamedir
+		return protocol_cell(candidate.protocol), host, fault_note
+
+	note = ":white_check_mark: answered on the declared protocol."
 	resolved = result.get("resolved")
 	if resolved and resolved != candidate.address:
 		note += f" Resolves to `{md_escape(resolved)}`, published as IP."
 
-	return protocol_cell(candidate.protocol), f"`{md_escape(result.get('host') or '')}`", note
+	return protocol_cell(candidate.protocol), host, note
 
-def probe_lines(probe, candidates, rejections, query_bin, timeout):
-	if not candidates:
-		return ["No new or changed server entries to probe.", ""]
-
-	lines = []
-	probing, skipped = candidates, len(candidates) - MAX_PROBE_ENTRIES
-	if skipped > 0:
+def run_probes(probe, candidates, rejections, query_bin, timeout):
+	"""Probe up to MAX_PROBE_ENTRIES candidates. Returns (probing, skipped, results)."""
+	probing, skipped = candidates, max(0, len(candidates) - MAX_PROBE_ENTRIES)
+	if skipped:
 		probing = candidates[:MAX_PROBE_ENTRIES]
-		lines.append(f"> Probing the first {MAX_PROBE_ENTRIES} of {len(candidates)} new or changed entries.")
-		lines.append("")
 
 	targets = [(c.address, c.protocol) for c in probing
 		if c.protocol is not None and c.address not in rejections]
 	results = probe.probe_all(query_bin, targets, timeout) if targets else {}
+	return probing, skipped, results
+
+def probe_lines(probing, skipped, total, results, rejections, touched):
+	if not total:
+		if not touched:
+			return ["This PR changes no server entries, so there is nothing to probe.", ""]
+		# the sources moved, but not in a way that changes what gets published
+		return ["No entry needs probing — nothing changed `address`, `protocol` or `force`.", ""]
+
+	lines = []
+	if skipped:
+		lines.append(f"> Probing the first {MAX_PROBE_ENTRIES} of {total} new or changed entries.")
+		lines.append("")
 
 	n = len(probing)
 	lines.append(f"Probed {n} new or changed entr{'y' if n == 1 else 'ies'}.")
@@ -255,7 +288,7 @@ def probe_lines(probe, candidates, rejections, query_bin, timeout):
 		lines.append(row(f"`{c.gamedir}`", f"`{c.address}`", md_escape(c.change),
 			protocol_cell(c.protocol, c.entry.get("protocol")), responder, host, note))
 
-	if skipped > 0:
+	if skipped:
 		lines.append("")
 		lines.append(f"> Skipped probing {skipped} additional entries. Open a smaller PR if you need all of them validated automatically.")
 	return lines
@@ -291,7 +324,7 @@ def missing_contact_lines(candidates):
 		return []
 	return [
 		"",
-		"### :warning: Missing `contact`",
+		"### :x: Missing `contact`",
 		"Per the [contribution policy](../blob/main/README.md#contribution-policy), new entries must include a `contact` field so maintainers can reach the operator. Please add one of:",
 		"- email, e.g. `contact = \"admin@example.com\"`",
 		"- Discord, as `discord:username` or a stable invite link",
@@ -300,6 +333,39 @@ def missing_contact_lines(candidates):
 		"Affected entries:",
 		*(f"- `{c.gamedir}` / `{c.address}`" for c in missing),
 	]
+
+def verdict_lines(head_errs, dupes, invalid, probing, results, rejections, candidates):
+	"""One line at the top saying whether this can be merged, and if not, why.
+
+	The table below it has the detail; this exists so the decision can be made
+	from the notification e-mail without opening anything.
+	"""
+	faults = collections.Counter()
+	if head_errs:
+		faults["TOML parse error"] += len(head_errs)
+	if dupes:
+		faults["duplicate entry"] += len(dupes.within) + len(dupes.across)
+	if invalid:
+		faults["entry without an address"] += len(invalid)
+
+	for c in probing:
+		label, _ = entry_fault(c, results.get((c.address, c.protocol)), rejections.get(c.address))
+		if label:
+			faults[label] += 1
+	missing = sum(1 for c in candidates if not c.contact)
+	if missing:
+		faults["missing `contact`"] += missing
+
+	if not faults:
+		n = len(probing)
+		if not n:
+			return [":white_check_mark: **Nothing to verify** — no entry in this PR needs probing.", ""]
+		return [f":white_check_mark: **Ready to merge** — {n} entr{'y' if n == 1 else 'ies'} verified, no problems found.", ""]
+
+	total = sum(faults.values())
+	detail = ", ".join(f"{n} {label}{'' if n == 1 else 's'}" if not label.endswith("`")
+		else f"{n} {label}" for label, n in faults.most_common())
+	return [f":x: **Not ready** — {total} problem{'' if total == 1 else 's'}: {detail}.", ""]
 
 def emit(lines, dest):
 	text = "\n".join(lines).rstrip() + "\n"
@@ -328,20 +394,19 @@ def main():
 	base_dupes = find_duplicates(base)
 	candidates, invalid = collect_candidates(base, head)
 
-	lines = [COMMENT_MARKER, "## Server list PR validation", ""]
-	lines += parse_error_lines(head_errs)
-	lines += duplicate_lines(head_dupes, base_dupes)
-
-	if not (candidates or head_errs or invalid or head_dupes):
-		lines.append("No new or changed server entries in this PR. Nothing to probe.")
-		emit(lines, args.out)
-		return 0
-
 	probe = import_probe(args.probe_script)
 	rejections = {c.address: why for c in candidates
 		if (why := probe.address_rejection(c.address))}
+	probing, skipped, results = run_probes(
+		probe, candidates, rejections, args.query, args.timeout)
 
-	lines += probe_lines(probe, candidates, rejections, args.query, args.timeout)
+	lines = [COMMENT_MARKER, "## Server list PR validation", ""]
+	lines += verdict_lines(head_errs, head_dupes, invalid, probing, results,
+		rejections, candidates)
+	lines += parse_error_lines(head_errs)
+	lines += duplicate_lines(head_dupes, base_dupes)
+	lines += probe_lines(probing, skipped, len(candidates), results, rejections,
+		touched=base != head)
 	lines += invalid_lines(invalid)
 	lines += non_public_lines(rejections)
 	lines += bad_protocol_lines(candidates)
