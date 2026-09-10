@@ -4,9 +4,12 @@
 # spurious failures, pruning of long-gone addresses).
 
 import argparse
+import functools
 import html
+import ipaddress
 import json
 import random
+import socket
 import statistics
 import subprocess
 import sys
@@ -271,12 +274,63 @@ def parse_protocol(raw):
 		return None
 	return value if value in VALID_PROTOCOLS else None
 
+def split_hostport(address):
+	# "1.2.3.4:27015", "example.com:27015" or "[2001:db8::1]:27015"
+	if not isinstance(address, str):
+		return None
+	rest, sep, port = address.rpartition(":")
+	if not sep or not port.isdigit() or not 0 < int(port) < 65536:
+		return None
+	host = rest[1:-1] if rest.startswith("[") and rest.endswith("]") else rest
+	return host or None
+
+def is_public(ip):
+	# is_global already excludes RFC1918, loopback, link-local, CGNAT, ULA,
+	# the documentation and benchmark ranges, and IPv4-mapped v6 — but it
+	# considers multicast global, which we never want to send a query to
+	return ip.is_global and not ip.is_multicast
+
+@functools.lru_cache(maxsize=None)
+def resolve_host(host):
+	"""Every IP a host maps to; the literal itself when it is already an IP."""
+	try:
+		return (ipaddress.ip_address(host),)
+	except ValueError:
+		pass
+	try:
+		infos = socket.getaddrinfo(host, None, proto=socket.IPPROTO_UDP)
+	except (socket.gaierror, UnicodeError):
+		return ()
+	return tuple(ipaddress.ip_address(info[4][0]) for info in infos)
+
+def address_rejection(address):
+	"""Why an address must not be probed or published, or None when it's fine.
+
+	Keeps entries from pointing the prober at a private network. That matters
+	most for PR validation, where the address is attacker-controlled and the
+	probe result is echoed into a public comment.
+	"""
+	host = split_hostport(address)
+	if host is None:
+		return "not a valid `host:port`"
+
+	ips = resolve_host(host)
+	if not ips:
+		# unresolvable today is not necessarily wrong: DNS may just be down,
+		# and the probe reports it as unreachable anyway
+		return None
+
+	bad = sorted({str(ip) for ip in ips if not is_public(ip)})
+	if bad:
+		return f"resolves to a non-public address ({', '.join(bad)})"
+	return None
+
 def build_targets(sources):
 	targets = set()
 	for entries in sources.values():
 		for entry in entries:
 			protocol = parse_protocol(entry.get("protocol"))
-			if entry.get("address") and protocol is not None:
+			if entry.get("address") and protocol is not None and not address_rejection(entry["address"]):
 				targets.add((entry["address"], protocol))
 	return sorted(targets)
 
@@ -303,6 +357,11 @@ def classify(gamedir, entry, protocol, result, prev, now, grace_hours):
 		# until engine uses blocking NET_StringToAdr
 		# which is entirely my bug, lol
 		pub = result.get("resolved") or address
+		# re-check what it actually resolved to: a name that looked public when
+		# we built the target list can point somewhere private by query time
+		rejection = address_rejection(pub)
+		if rejection:
+			return Decision(log=f"  [!] {gamedir:>12}  {address} -> {pub}  {rejection}, not published")
 		seen = f"{address} -> {pub}" if pub != address else address
 		players = int(result.get("numcl") or 0)
 		ping = result.get("ping")
@@ -337,6 +396,12 @@ def probe_gamedir(gamedir, entries, gd_state, results, now, now_iso, grace_hours
 		protocol = parse_protocol(entry.get("protocol"))
 		if protocol is None:
 			print(f"  [!] {gamedir:>12}  {address}  invalid protocol {entry.get('protocol')!r}, skipped", flush=True)
+			continue
+
+		# checked before force and grace can put it back in the list
+		rejection = address_rejection(address)
+		if rejection:
+			print(f"  [!] {gamedir:>12}  {address}  {rejection}, skipped", flush=True)
 			continue
 
 		prev = gd_state.setdefault(address, {})

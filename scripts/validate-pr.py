@@ -199,8 +199,11 @@ def duplicate_lines(head_dupes, base_dupes):
 	lines.append("")
 	return lines
 
-def result_cells(candidate, result):
+def result_cells(candidate, result, rejection=None):
 	"""The responder, host and notes cells for one probed entry."""
+	if rejection:
+		return "—", "—", f":x: {rejection}; not probed — see below."
+
 	if candidate.protocol is None:
 		return "—", "—", ":x: unusable `protocol`, not probed — see below."
 
@@ -227,7 +230,7 @@ def result_cells(candidate, result):
 
 	return protocol_cell(candidate.protocol), f"`{md_escape(result.get('host') or '')}`", note
 
-def probe_lines(candidates, probe_script, query_bin, timeout):
+def probe_lines(probe, candidates, rejections, query_bin, timeout):
 	if not candidates:
 		return ["No new or changed server entries to probe.", ""]
 
@@ -238,8 +241,8 @@ def probe_lines(candidates, probe_script, query_bin, timeout):
 		lines.append(f"> Probing the first {MAX_PROBE_ENTRIES} of {len(candidates)} new or changed entries.")
 		lines.append("")
 
-	probe = import_probe(probe_script)
-	targets = [(c.address, c.protocol) for c in probing if c.protocol is not None]
+	targets = [(c.address, c.protocol) for c in probing
+		if c.protocol is not None and c.address not in rejections]
 	results = probe.probe_all(query_bin, targets, timeout) if targets else {}
 
 	n = len(probing)
@@ -247,7 +250,8 @@ def probe_lines(candidates, probe_script, query_bin, timeout):
 	lines.append("")
 	lines += TABLE_HEADER
 	for c in probing:
-		responder, host, note = result_cells(c, results.get((c.address, c.protocol)))
+		responder, host, note = result_cells(c, results.get((c.address, c.protocol)),
+			rejections.get(c.address))
 		lines.append(row(f"`{c.gamedir}`", f"`{c.address}`", md_escape(c.change),
 			protocol_cell(c.protocol, c.entry.get("protocol")), responder, host, note))
 
@@ -261,6 +265,17 @@ def invalid_lines(invalid):
 		return []
 	return ["", "### :x: Invalid entries",
 		*(f"- `{gamedir}`: {why}" for gamedir, why in invalid)]
+
+def non_public_lines(rejections):
+	if not rejections:
+		return []
+	return [
+		"",
+		"### :x: Address is not publicly routable",
+		*(f"- `{address}` {why}" for address, why in sorted(rejections.items())),
+		"",
+		"Entries must point at a public address. The prober refuses these so a list entry cannot aim it at a private network, and an unroutable address would be useless to clients anyway.",
+	]
 
 def bad_protocol_lines(candidates):
 	bad = [c for c in candidates if c.protocol is None]
@@ -322,8 +337,13 @@ def main():
 		emit(lines, args.out)
 		return 0
 
-	lines += probe_lines(candidates, args.probe_script, args.query, args.timeout)
+	probe = import_probe(args.probe_script)
+	rejections = {c.address: why for c in candidates
+		if (why := probe.address_rejection(c.address))}
+
+	lines += probe_lines(probe, candidates, rejections, args.query, args.timeout)
 	lines += invalid_lines(invalid)
+	lines += non_public_lines(rejections)
 	lines += bad_protocol_lines(candidates)
 	lines += missing_contact_lines(candidates)
 	lines += ["", "---", FOOTER]
