@@ -23,9 +23,10 @@ HOUR_WINDOW_HOURS = 14 * 24
 WEEKDAY_WINDOW_HOURS = 6 * 7 * 24
 SAMPLE_RETAIN_HOURS = WEEKDAY_WINDOW_HOURS
 
-def probe_batch(query_bin, addresses, timeout):
-	# use one query invocation for multiple addresses
-	cmd = [query_bin, "info", *addresses, "-j", "-c", "-P", "-t", str(int(timeout))]
+def probe_batch(query_bin, addresses, timeout, protocol):
+	# use one query invocation for multiple addresses, all on one protocol
+	cmd = [query_bin, "info", *addresses, "-j", "-c", "-P",
+		"-t", str(int(timeout)), "--protocol", str(protocol)]
 
 	try:
 		out = subprocess.run(cmd, capture_output=True, text=True, timeout=timeout + 5)
@@ -43,18 +44,29 @@ def probe_batch(query_bin, addresses, timeout):
 	live = {}
 	for server in doc.get("servers") or []:
 		address = server.get("address")
-		if address and server.get("status") == "ok":
-			live[address] = server
+		if not address or server.get("status") != "ok":
+			continue
+		# the declared protocol is the contract: a server that answers on
+		# anything else is not the server this entry describes. Keep the
+		# response around so callers can say so, but mark it unusable.
+		live[address] = server if server.get("protocol") == protocol else {"wrong_protocol": server.get("protocol")}
 	return live
 
-def probe_all(query_bin, addresses, timeout):
-	# probe every address in shuffled batches
-	pending = list(addresses)
+def probe_all(query_bin, targets, timeout):
+	# targets: iterable of (address, protocol). Each protocol is queried
+	# separately, so a dual-stack server cannot race its two replies.
+	pending = list(targets)
 	random.shuffle(pending)
+	by_proto = {}
+	for address, protocol in pending:
+		by_proto.setdefault(int(protocol), []).append(address)
+
 	results = {}
-	for start in range(0, len(pending), BATCH_SIZE):
-		batch = pending[start:start + BATCH_SIZE]
-		results.update(probe_batch(query_bin, batch, timeout))
+	for protocol, addresses in by_proto.items():
+		for start in range(0, len(addresses), BATCH_SIZE):
+			batch = addresses[start:start + BATCH_SIZE]
+			for address, server in probe_batch(query_bin, batch, timeout, protocol).items():
+				results[(address, protocol)] = server
 	return results
 
 def load_sources(servers_dir):
@@ -281,8 +293,9 @@ def main():
 	samples = state.setdefault("samples", {})
 	now_ts = int(now.timestamp())
 
-	all_addrs = sorted({e["address"] for entries in sources.values() for e in entries if e.get("address")})
-	results = probe_all(args.query, all_addrs, args.timeout)
+	targets = sorted({(e["address"], int(e.get("protocol") or PROTO_XASH))
+		for entries in sources.values() for e in entries if e.get("address")})
+	results = probe_all(args.query, targets, args.timeout)
 
 	gamedirs = []
 	for gamedir, entries in sources.items():
@@ -298,7 +311,11 @@ def main():
 			proto = int(entry.get("protocol") or PROTO_XASH)
 			prev = gd_state.setdefault(address, {})
 
-			result = results.get(address)
+			result = results.get((address, proto))
+			wrong_proto = result.get("wrong_protocol") if result else None
+			if wrong_proto is not None:
+				# answered, but not on the protocol this entry declares
+				result = None
 
 			prev["last_attempt"] = now_iso
 			if result is not None:
@@ -308,7 +325,7 @@ def main():
 				# until engine uses blocking NET_StringToAdr
 				# which is entirely my bug, lol
 				pub = result.get("resolved") or address
-				# use the source's protocol, not the responder's
+				# proto is both what we queried and what it answered
 				live_addrs.append((pub, proto))
 				live_now += 1
 				numcl = int(result.get("numcl") or 0)
@@ -326,10 +343,10 @@ def main():
 				live_addrs.append((address, proto))
 				grace_kept += 1
 				print(f"  [~] {gamedir:>12}  {address}  silent now, last seen {age:.1f}h ago (grace)", flush=True)
-			elif prev.get("last_seen"):
-				print(f"  [-] {gamedir:>12}  {address}  silent (last seen {age:.1f}h ago)", flush=True)
 			else:
-				print(f"  [-] {gamedir:>12}  {address}", flush=True)
+				why = f"answers protocol {wrong_proto}, not {proto}" if wrong_proto is not None else "silent"
+				seen_note = f" (last seen {age:.1f}h ago)" if prev.get("last_seen") else ""
+				print(f"  [-] {gamedir:>12}  {address}  {why}{seen_note}", flush=True)
 
 		gamedirs.append([gamedir, len(entries), len(live_addrs)])
 

@@ -27,7 +27,7 @@ scripts/
    ```toml
    [[server]]
    address  = "203.0.113.7:27015"
-   protocol = 49        # 49 = Xash, 48 = GoldSrc
+   protocol = 49        # 49 = Xash, 48 = GoldSrc; probed on this protocol only
    contact  = "admin@example.com"   # required for new entries; never published
    # host   = "Cool Deathmatch"     # optional informational note
    ```
@@ -65,6 +65,12 @@ to maintainers but never to end users.
   abuse report against your server, or an automated reminder that your
   engine/mod build is outdated. Filtering those out gets your entry removed,
   same as an unreachable address.
+- **`protocol` is the contract.** 49 is Xash, 48 is GoldSrc. Every entry is
+  probed on the protocol it declares and on that one only. A server that does
+  not answer there is treated as dead and is not published, even if it happily
+  answers on the other protocol. Declaring a GoldSrc server as Xash, or the
+  reverse, to work around something else is not supported: fix the field, or
+  fix the server.
 - **Legacy entries.** The servers populated in the initial commit, seeded
   from the old UDP master lists, have no `contact` field because we don't
   know who to ask. They are grandfathered in. Any new PR that adds an entry

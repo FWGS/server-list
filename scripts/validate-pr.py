@@ -49,6 +49,20 @@ def load_entries(ref, sources_dir):
 def md_escape(s):
 	return (s or "").replace("|", "\\|").replace("\n", " ").replace("\r", " ")
 
+def probe_fields(e):
+	# fields that change what gets published for an address, and so warrant
+	# a re-probe even when the address itself is untouched
+	proto = e.get("protocol")
+	try:
+		proto = PROTO_XASH if proto is None else int(proto)
+	except (TypeError, ValueError):
+		pass  # keep the raw value so a bogus one still reads as a change
+	return {"protocol": proto, "force": bool(e.get("force"))}
+
+def diff_probe_fields(before, after):
+	a, b = probe_fields(before), probe_fields(after)
+	return [f"`{k}` {a[k]} → {b[k]}" for k in a if a[k] != b[k]]
+
 def main():
 	ap = argparse.ArgumentParser(description=__doc__)
 	ap.add_argument("--base-ref", required=True)
@@ -73,7 +87,7 @@ def main():
 		lines.append("Fix these before merging — the publish workflow would fail on main otherwise.")
 		lines.append("")
 
-	base_set = {(g, e.get("address")) for g, es in base.items() for e in es if e.get("address")}
+	base_map = {(g, e.get("address")): e for g, es in base.items() for e in es if e.get("address")}
 
 	new_entries = []
 	invalid_entries = []
@@ -83,35 +97,49 @@ def main():
 			if not addr:
 				invalid_entries.append((g, "<missing address>", "entry has no `address` field"))
 				continue
-			if (g, addr) in base_set:
+			prev = base_map.get((g, addr))
+			if prev is None:
+				# unknown address: either a brand new entry, or an existing
+				# one whose address changed (indistinguishable, probe either way)
+				new_entries.append((g, e, "new"))
 				continue
-			new_entries.append((g, e))
+			changes = diff_probe_fields(prev, e)
+			if changes:
+				new_entries.append((g, e, ", ".join(changes)))
 
 	if not new_entries and not head_errs and not invalid_entries:
-		lines.append("No new server entries in this PR. Nothing to probe.")
+		lines.append("No new or changed server entries in this PR. Nothing to probe.")
 		emit(lines, args.out)
 		return 0
 
 	probed = []
 	if new_entries:
-		truncated = False
-		if len(new_entries) > MAX_PROBE_ENTRIES:
-			lines.append(f"> Probing the first {MAX_PROBE_ENTRIES} of {len(new_entries)} new entries.")
+		total_entries = len(new_entries)
+		skipped = 0
+		if total_entries > MAX_PROBE_ENTRIES:
+			lines.append(f"> Probing the first {MAX_PROBE_ENTRIES} of {total_entries} new or changed entries.")
 			lines.append("")
+			skipped = total_entries - MAX_PROBE_ENTRIES
 			new_entries = new_entries[:MAX_PROBE_ENTRIES]
-			truncated = True
 
 		probe = import_probe(args.probe_script)
 
-		results = probe.probe_all(args.query, [e["address"] for _, e in new_entries], args.timeout)
+		targets = []
+		for _, e, _ in new_entries:
+			try:
+				proto = int(e.get("protocol") or PROTO_XASH)
+			except (TypeError, ValueError):
+				continue  # bogus `protocol`, reported by the policy check below
+			targets.append((e["address"], proto))
+		results = probe.probe_all(args.query, targets, args.timeout)
 
 		n = len(new_entries)
-		lines.append(f"Probed {n} new entr{'y' if n == 1 else 'ies'}.")
+		lines.append(f"Probed {n} new or changed entr{'y' if n == 1 else 'ies'}.")
 		lines.append("")
-		lines.append("| Gamedir | Address | Claimed | Responder | Host | Notes |")
-		lines.append("|---|---|---|---|---|---|")
+		lines.append("| Gamedir | Address | Change | Claimed | Responder | Host | Notes |")
+		lines.append("|---|---|---|---|---|---|---|")
 
-		for g, e in new_entries:
+		for g, e, change in new_entries:
 			addr = e["address"]
 			claimed = e.get("protocol")
 			try:
@@ -119,39 +147,37 @@ def main():
 			except (TypeError, ValueError):
 				claimed_int = None
 
-			result = results.get(addr)
+			result = results.get((addr, claimed_int))
 			probed.append((g, addr, e, claimed_int, result))
 
 			claimed_cell = f"{claimed_int} ({PROTO_NAMES[claimed_int]})" if claimed_int in PROTO_NAMES else f"`{claimed}` :x:"
 
-			if result is None:
-				lines.append(f"| `{g}` | `{addr}` | {claimed_cell} | — | — | :x: no response — server unreachable; will not be published until it answers |")
+			# probe.py queries each entry on its declared protocol only, and
+			# reports an answer on any other protocol as a non-response
+			wrong_proto = result.get("wrong_protocol") if result else None
+			if wrong_proto is not None:
+				wrong_cell = f"{wrong_proto} ({PROTO_NAMES[wrong_proto]})" if wrong_proto in PROTO_NAMES else f"`{wrong_proto}`"
+				lines.append(f"| `{g}` | `{addr}` | {md_escape(change)} | {claimed_cell} | {wrong_cell} | — | :x: no answer on protocol {claimed_int}; it answered on {wrong_proto} instead. Fix `protocol`, or the server, so they agree — it will not be published as-is. |")
 				continue
 
-			got = result.get("protocol")
+			if result is None:
+				lines.append(f"| `{g}` | `{addr}` | {md_escape(change)} | {claimed_cell} | — | — | :x: no response — server unreachable; will not be published until it answers |")
+				continue
+
 			host = md_escape(result.get("host") or "")
 			gd = result.get("gamedir") or ""
 			gd_note = "" if gd == g else f" responder gamedir: `{md_escape(gd)}`."
-			got_cell = f"{got} ({PROTO_NAMES[got]})" if got in PROTO_NAMES else f"`{got}`"
-
-			if got == claimed_int:
-				note = ":white_check_mark: protocol match." + gd_note
-			elif claimed_int == PROTO_GOLDSRC and got == PROTO_XASH:
-				note = ":warning: responder advertises Xash. This is the known GoldSrc-fronting-as-Xash workaround (legacy UDP master compatibility), accepted." + gd_note
-			elif claimed_int == PROTO_XASH and got == PROTO_GOLDSRC:
-				note = ":warning: claimed Xash but responder advertises GoldSrc — please double-check `protocol`." + gd_note
-			else:
-				note = f":warning: unexpected responder protocol {got}." + gd_note
+			note = ":white_check_mark: answered on the declared protocol." + gd_note
 
 			resolved = result.get("resolved")
 			if resolved and resolved != addr:
 				note += f" Resolves to `{md_escape(resolved)}`, published as IP."
 
-			lines.append(f"| `{g}` | `{addr}` | {claimed_cell} | {got_cell} | `{host}` | {note} |")
+			lines.append(f"| `{g}` | `{addr}` | {md_escape(change)} | {claimed_cell} | {claimed_cell} | `{host}` | {note} |")
 
-		if truncated:
+		if skipped:
 			lines.append("")
-			lines.append(f"> Skipped probing {len(new_entries) - MAX_PROBE_ENTRIES} additional entries. Open a smaller PR if you need all of them validated automatically.")
+			lines.append(f"> Skipped probing {skipped} additional entries. Open a smaller PR if you need all of them validated automatically.")
 
 	# Post-table policy checks.
 	bad_proto = []
