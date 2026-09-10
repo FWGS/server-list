@@ -79,17 +79,17 @@ host     = "[IceEyes] CLASSIC PUBLIC (rank / vip system)"
 
 [[server]]
 address  = "82.77.209.165:27015"
-protocol = 49
+protocol = 48
 host     = "# LastCS.RO GunGame~AntiCheat~2xJump~SpawnProtect~1000FPS"
 
 [[server]]
 address  = "82.77.209.92:27015"
-protocol = 49
+protocol = 48
 host     = "# LastCS.RO Respawn~AntiCheat~2xJump~SpawnProtect~1000FPS"
 
 [[server]]
 address  = "82.77.209.95:27015"
-protocol = 49
+protocol = 48
 host     = "# LastCS.RO Zombie Swarm Defense~Knockback~Leap~1000FPS"
 
 [[server]]
@@ -130,7 +130,7 @@ host     = "Fantasy Gaming | Zombie Escape | FreeVIP+CSO+Events"
 
 [[server]]
 address  = "136.110.10.31:27015"
-protocol = 48
+protocol = 49
 contact  = "t.me/moha_kun , discord: mohmemes.dz"
 host     = "CloverXD | Zombie Escape Mod [ViP | XP | CSO]"
 
