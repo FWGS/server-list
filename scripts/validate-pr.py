@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 
 import argparse
+import collections
 import importlib.util
 import subprocess
 import sys
@@ -46,6 +47,23 @@ def load_entries(ref, sources_dir):
 		gamedirs[gamedir] = doc.get("server") or []
 	return gamedirs, errors
 
+def find_duplicates(gamedirs):
+	# an address:port serves exactly one gamedir, so it must appear exactly
+	# once across the whole source tree
+	counts = collections.Counter()
+	for g, es in gamedirs.items():
+		for e in es:
+			if e.get("address"):
+				counts[(g, e["address"])] += 1
+
+	within = {k: n for k, n in counts.items() if n > 1}
+
+	by_addr = collections.defaultdict(set)
+	for g, addr in counts:
+		by_addr[addr].add(g)
+	across = {a: sorted(gs) for a, gs in by_addr.items() if len(gs) > 1}
+	return within, across
+
 def md_escape(s):
 	return (s or "").replace("|", "\\|").replace("\n", " ").replace("\r", " ")
 
@@ -87,6 +105,25 @@ def main():
 		lines.append("Fix these before merging — the publish workflow would fail on main otherwise.")
 		lines.append("")
 
+	dup_within, dup_across = find_duplicates(head)
+	base_within, base_across = find_duplicates(base)
+	# only fail the check for duplicates this PR actually introduces
+	introduced = bool({k for k in dup_within if k not in base_within}
+		or {a for a in dup_across if a not in base_across})
+
+	if dup_within or dup_across:
+		lines.append("### :x: Duplicate entries")
+		for (g, addr), n in sorted(dup_within.items()):
+			old_note = " *(already on the base branch)*" if (g, addr) in base_within else ""
+			lines.append(f"- `{addr}` appears {n} times in `{g}.toml`{old_note}")
+		for addr, gs in sorted(dup_across.items()):
+			old_note = " *(already on the base branch)*" if addr in base_across else ""
+			gd_list = ", ".join(f"`{x}`" for x in gs)
+			lines.append(f"- `{addr}` is listed under several gamedirs: {gd_list}{old_note} — one address:port serves a single gamedir")
+		lines.append("")
+		lines.append("Every address must appear exactly once. `probe.py` keys its state and its probe targets by address, so the extra copies are silently dropped from the published list while still inflating the entry count in `v1/gamedirs`.")
+		lines.append("")
+
 	base_map = {(g, e.get("address")): e for g, es in base.items() for e in es if e.get("address")}
 
 	new_entries = []
@@ -107,10 +144,14 @@ def main():
 			if changes:
 				new_entries.append((g, e, ", ".join(changes)))
 
-	if not new_entries and not head_errs and not invalid_entries:
+	if not new_entries and not head_errs and not invalid_entries and not dup_within and not dup_across:
 		lines.append("No new or changed server entries in this PR. Nothing to probe.")
 		emit(lines, args.out)
 		return 0
+
+	if not new_entries:
+		lines.append("No new or changed server entries to probe.")
+		lines.append("")
 
 	probed = []
 	if new_entries:
@@ -217,7 +258,7 @@ def main():
 	lines.append("<sub>Probes can be flaky on the first try; the nightly publish workflow re-probes with a 48 h grace window, so a single :x: here is not necessarily fatal. Re-push to re-run.</sub>")
 
 	emit(lines, args.out)
-	return 0
+	return 1 if introduced else 0
 
 def emit(lines, dest):
 	text = "\n".join(lines).rstrip() + "\n"
