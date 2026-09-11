@@ -1,11 +1,6 @@
 # Auto-populated on 2026-06-05 from old UDP master snapshots
 
 [[server]]
-address  = "193.111.77.184:27011"
-protocol = 49
-host     = "[AntiCheat]DeathMatch"
-
-[[server]]
 address  = "51.91.249.12:27017"
 protocol = 49
 host     = "[Lemita]:: HLDM (t.me/lemita_project)"

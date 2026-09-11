@@ -13,16 +13,6 @@ contact  = "1033341124@qq.com"
 host     = "[XXH] CSDM:FFA Qqun:434673380"
 
 [[server]]
-address  = "119.29.13.60:27015"
-protocol = 49
-host     = "[Sanf] Zombie Shelter (Days:1)"
-
-[[server]]
-address  = "119.45.252.164:27015"
-protocol = 49
-host     = "[CN-G8] OLD PUBLIC Q：745991186"
-
-[[server]]
 address  = "119.91.201.9:27015"
 protocol = 49
 host     = "--[R]--[Zombie 5.0]--(CF Hero) Level EXP--616117100"
@@ -33,16 +23,6 @@ protocol = 49
 host     = "[FFA] Empty Protocol [CSDM]"
 
 [[server]]
-address  = "175.178.163.250:27020"
-protocol = 49
-host     = "CN.YsYTo 8v8 Qqun:370031524"
-
-[[server]]
-address  = "175.178.163.250:27021"
-protocol = 49
-host     = "CN.YsYTo AWP Qqun:370031524"
-
-[[server]]
 address  = "185.189.167.10:27015"
 protocol = 49
 host     = "r2d2 [yapb/arm64]"
@@ -51,11 +31,6 @@ host     = "r2d2 [yapb/arm64]"
 address  = "188.212.103.154:27015"
 protocol = 49
 host     = "* BIO.DINSCURT.COM | Zombie-Strike"
-
-[[server]]
-address  = "193.111.77.184:27031"
-protocol = 49
-host     = "[TR] Temel v2"
 
 [[server]]
 address  = "217.154.211.69:27025"
@@ -101,13 +76,6 @@ host     = "# Cs.Lastcs.Ro#ClassicOldSchool~AntiCheat~WarmUp~SpawnProtect~1000FP
 address  = "89.207.221.227:27015"
 protocol = 49
 host     = "[CSVR] Noname Server"
-
-[[server]]
-address  = "47.96.116.126:27015"
-protocol = 49
-host     = "^3GM ^1Zombie ^2Meat ^55.0 ^6| Free Hook,VIP Qqun:622456398"
-
-
 
 # Added on 2026-06-06 from a follow-up master dump
 [[server]]
