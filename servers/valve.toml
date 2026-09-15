@@ -56,3 +56,11 @@ address  = "72.34.103.90:27015"
 protocol = 49
 host     = "Disco_Wookie DM"
 contact  = "ajpcinc@gmail.com"
+
+# Adding [DM]Europe 2026-09-15
+
+[[server]]
+address  = "57.129.154.247:27015"
+protocol = 49
+contact  = "europedm@proton.me"
+host     = "[DM]Europe"
