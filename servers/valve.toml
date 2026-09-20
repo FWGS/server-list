@@ -56,3 +56,11 @@ address  = "72.34.103.90:27015"
 protocol = 49
 host     = "Disco_Wookie DM"
 contact  = "ajpcinc@gmail.com"
+
+# Adding [neco] Zombie Plague 2026-09-20
+
+[[server]]
+address  = "147.224.170.114:27015"
+protocol = 49
+host     = "[neco] Zombie Plague"
+contact  = "dangneco@icloud.com"
