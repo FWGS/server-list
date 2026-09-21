@@ -49,18 +49,20 @@ contact  = "info@goldsrc.one"
 protocol = 48
 host     = "[GoldSrc.one] CrossPlay (register at discord.goldsrc.one)"
 
-# Adding Disco_Wookie DM 2026-09-04
-
 [[server]]
 address  = "72.34.103.90:27015"
 protocol = 49
 host     = "Disco_Wookie DM"
 contact  = "ajpcinc@gmail.com"
 
-# Adding [DM]Europe 2026-09-15
-
 [[server]]
 address  = "57.129.154.247:27015"
 protocol = 49
 contact  = "europedm@proton.me"
 host     = "[DM]Europe"
+
+[[server]]
+address  = "147.224.170.114:27015"
+protocol = 49
+host     = "[neco] Zombie Plague"
+contact  = "dangneco@icloud.com"
