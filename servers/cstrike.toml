@@ -161,3 +161,9 @@ address  = "132.243.253.240:2253"
 protocol = 48
 contact  = "rimage2024@gmail.com"
 host   = "the liche family | Zombie escape "
+
+[[server]]
+address  = "173.212.228.115:27015"
+protocol = 49
+contact  = "kazuyamezu@gmail.com"
+host     = "Zombie Nightmare v1.0"
