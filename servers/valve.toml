@@ -7,9 +7,9 @@ host     = "[Lemita]:: HLDM (t.me/lemita_project)"
 
 [[server]]
 address  = "2.26.26.83:27015"
-protocol = 49
+protocol = 48
 contact  = "nikolaeve10@gmail.com, telegram: elinsrc"
-host     = "[Half-Life Collective] Updated DM"
+host     = "ReHLDS Updated DM"
 
 [[server]]
 address  = "94.138.138.9:27015"
