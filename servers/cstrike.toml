@@ -161,3 +161,9 @@ address  = "132.243.253.240:2253"
 protocol = 48
 contact  = "rimage2024@gmail.com"
 host   = "the liche family | Zombie escape "
+
+[[server]]
+address = "81.181.244.5:27015"
+protocol = 48
+contact = "info@csomod.com"
+host = "[ZOMBIES]+[CSO MOD] [#1] CSOMOD.COM [since 2012]"
