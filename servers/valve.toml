@@ -14,19 +14,16 @@ host     = "ReHLDS Updated DM"
 [[server]]
 address  = "94.138.138.9:27015"
 protocol = 49
-force    = true
 host     = "LSHLDS Stalkyard"
 
 [[server]]
 address  = "94.138.138.9:27016"
 protocol = 49
-force    = true
 host     = "LSHLDS Crossfire"
 
 [[server]]
 address  = "94.138.138.9:27017"
 protocol = 49
-force    = true
 host     = "LSHLDS Bounce"
 
 # Added on 2026-06-06 from a follow-up master dump

@@ -75,7 +75,6 @@ def probe_fields(entry):
 	# any of them warrants a re-probe even when the address is untouched
 	return {
 		"protocol": entry.get("protocol", PROTO_XASH),
-		"force": bool(entry.get("force")),
 	}
 
 def diff_probe_fields(before, after):
@@ -271,7 +270,7 @@ def probe_lines(probing, skipped, total, results, rejections, touched):
 		if not touched:
 			return ["This PR changes no server entries, so there is nothing to probe.", ""]
 		# the sources moved, but not in a way that changes what gets published
-		return ["No entry needs probing — nothing changed `address`, `protocol` or `force`.", ""]
+		return ["No entry needs probing — nothing changed `address` or `protocol`.", ""]
 
 	lines = []
 	if skipped:

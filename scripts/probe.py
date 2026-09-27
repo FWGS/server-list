@@ -371,11 +371,6 @@ def classify(gamedir, entry, protocol, result, prev, now, grace_hours):
 
 	age = hours_since(prev.get("last_seen"), now)
 
-	if entry.get("force"):
-		return Decision(
-			log=f"  [F] {gamedir:>12}  {address}  silent now, published anyway (force)",
-			publish=(address, protocol))
-
 	if age <= grace_hours:
 		return Decision(
 			log=f"  [~] {gamedir:>12}  {address}  silent now, last seen {age:.1f}h ago (grace)",
@@ -398,7 +393,7 @@ def probe_gamedir(gamedir, entries, gd_state, results, now, now_iso, grace_hours
 			print(f"  [!] {gamedir:>12}  {address}  invalid protocol {entry.get('protocol')!r}, skipped", flush=True)
 			continue
 
-		# checked before force and grace can put it back in the list
+		# checked before grace can put it back in the list
 		rejection = address_rejection(address)
 		if rejection:
 			print(f"  [!] {gamedir:>12}  {address}  {rejection}, skipped", flush=True)
