@@ -63,3 +63,9 @@ address  = "147.224.170.114:27015"
 protocol = 49
 host     = "[neco] Zombie Plague"
 contact  = "dangneco@icloud.com"
+
+[[server]]
+address  = "147.224.170.114:27016"
+protocol = 49
+host     = "[neco] HL Coop"
+contact  = "dangneco@icloud.com"
