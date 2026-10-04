@@ -167,3 +167,9 @@ address = "81.181.244.5:27015"
 protocol = 48
 contact = "info@csomod.com"
 host = "[ZOMBIES]+[CSO MOD] [#1] CSOMOD.COM [since 2012]"
+
+[[server]]
+address  = "94.156.11.186:27020"
+protocol = 48
+contact  = "Discord: vx.moha"
+host   = "Venom Xtreme | Zombie Escape | Naruto Shippuden"
