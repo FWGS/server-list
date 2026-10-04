@@ -69,3 +69,10 @@ address  = "147.224.170.114:27016"
 protocol = 49
 host     = "[neco] HL Coop"
 contact  = "dangneco@icloud.com"
+
+[[server]]
+address = "play.agcs.2bd.net:27015"
+protocol = 49
+contact = "Discord: Dev.Kareem"
+host = "[New] FreeToPlay "
+
