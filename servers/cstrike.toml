@@ -173,3 +173,9 @@ address  = "94.156.11.186:27020"
 protocol = 48
 contact  = "Discord: vx.moha"
 host   = "Venom Xtreme | Zombie Escape | Naruto Shippuden"
+
+[[server]]
+address  = "127.0.0.1:27420"
+protocol = 49
+contact  = "zafreelab@gmail.com"
+host     = "Counter Strike 2 Advanced Thai"
