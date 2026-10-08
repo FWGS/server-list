@@ -169,6 +169,12 @@ contact = "info@csomod.com"
 host = "[ZOMBIES]+[CSO MOD] [#1] CSOMOD.COM [since 2012]"
 
 [[server]]
+address  = "185.84.160.19:27015"
+protocol = 49
+contact  = "Discord: ZaFree"
+host   = "Counter Strike Advanced Edition"
+
+[[server]]
 address  = "94.156.11.186:27020"
 protocol = 48
 contact  = "Discord: vx.moha"
