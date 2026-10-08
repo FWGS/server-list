@@ -175,7 +175,7 @@ contact  = "https://discord.gg/UzvgdvZ5Wy"
 host   = "Counter Strike Advanced Edition Classic"
 
 [[server]]
-address  = "185.84.160.19:27115"
+address  = "185.84.160.19:27119"
 protocol = 49
 contact  = "https://discord.gg/UzvgdvZ5Wy"
 host   = "Counter Strike Advanced Edition Team DeathMatch"
