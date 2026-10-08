@@ -171,7 +171,7 @@ host = "[ZOMBIES]+[CSO MOD] [#1] CSOMOD.COM [since 2012]"
 [[server]]
 address  = "185.84.160.19:27015"
 protocol = 49
-contact  = "Discord: ZaFree"
+contact  = "https://discord.gg/UzvgdvZ5Wy"
 host   = "Counter Strike Advanced Edition"
 
 [[server]]
