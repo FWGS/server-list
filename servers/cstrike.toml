@@ -169,6 +169,24 @@ contact = "info@csomod.com"
 host = "[ZOMBIES]+[CSO MOD] [#1] CSOMOD.COM [since 2012]"
 
 [[server]]
+address  = "185.84.160.19:27015"
+protocol = 49
+contact  = "https://discord.gg/UzvgdvZ5Wy"
+host   = "Counter Strike Advanced Edition Classic"
+
+[[server]]
+address  = "185.84.160.19:27119"
+protocol = 49
+contact  = "https://discord.gg/UzvgdvZ5Wy"
+host   = "Counter Strike Advanced Edition Team DeathMatch"
+
+[[server]]
+address  = "185.84.160.19:27215"
+protocol = 49
+contact  = "https://discord.gg/UzvgdvZ5Wy"
+host   = "Counter Strike Advanced Edition DeathMatch"
+
+[[server]]
 address  = "94.156.11.186:27020"
 protocol = 48
 contact  = "Discord: vx.moha"
