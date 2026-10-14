@@ -191,3 +191,9 @@ address  = "94.156.11.186:27020"
 protocol = 48
 contact  = "Discord: vx.moha"
 host   = "Venom Xtreme | Zombie Escape | Naruto Shippuden"
+
+[[server]]
+address  = "16.170.223.249:27015"
+protocol = 48
+contact  = "nizartiko628@gmail.com"
+host     = "HELLRAISERS | ZOMBIE PLAGUE"
