@@ -198,3 +198,9 @@ protocol = 48
 contact  = "matheus.rondine@terra.com.br"
 host     = "zS.TeaM zM"
 
+[[server]]
+address = "16.170.223.249:27015"
+protocol = 48
+contact = "discord:blackwolf82929"
+host = "NECROHAZARD 1.0v"
+
