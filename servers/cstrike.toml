@@ -1,13 +1,13 @@
 # Auto-populated on 2026-06-05 from old UDP master snapshots
 
 [[server]]
-address  = "222.187.254.125:23015"
+address  = "by.ctymc.cn:20977"
 protocol = 49
 contact  = "1033341124@qq.com"
 host     = "[XXH] Zombie Crisis"
 
 [[server]]
-address  = "222.187.254.125:23016"
+address  = "by.ctymc.cn:20916"
 protocol = 49
 contact  = "1033341124@qq.com"
 host     = "[XXH] CSDM:FFA Qqun:434673380"
