@@ -198,3 +198,62 @@ protocol = 48
 contact  = "matheus.rondine@terra.com.br"
 host     = "zS.TeaM zM"
 
+[[server]]
+address = "177.54.201.194:27015"
+protocol = 48
+contact = "servers@gamecs.com.br"
+host = "GameCS - 4FUN"
+
+[[server]]
+address = "177.54.201.194:27016"
+protocol = 48
+contact = "servers@gamecs.com.br"
+host = "GameCS - PUG"
+
+[[server]]
+address = "177.54.201.194:27017"
+protocol = 48
+contact = "servers@gamecs.com.br"
+host = "GameCS - Deathmatch"
+
+[[server]]
+address = "177.54.201.194:27018"
+protocol = 48
+contact = "servers@gamecs.com.br"
+host = "GameCS - GunGame"
+
+[[server]]
+address = "177.54.201.194:27019"
+protocol = 48
+contact = "servers@gamecs.com.br"
+host = "GameCS - 4PRO"
+
+[[server]]
+address = "177.54.201.194:27020"
+protocol = 48
+contact = "servers@gamecs.com.br"
+host = "GameCS - Deathrun"
+
+[[server]]
+address = "177.54.201.194:27021"
+protocol = 48
+contact = "servers@gamecs.com.br"
+host = "GameCS - Surf"
+
+[[server]]
+address = "177.54.201.194:27022"
+protocol = 48
+contact = "servers@gamecs.com.br"
+host = "GameCS - SuperHero"
+
+[[server]]
+address = "177.54.201.194:27023"
+protocol = 48
+contact = "servers@gamecs.com.br"
+host = "GameCS - CPL"
+
+[[server]]
+address = "177.54.201.194:27024"
+protocol = 48
+contact = "servers@gamecs.com.br"
+host = "GameCS - ZOMBIE"
