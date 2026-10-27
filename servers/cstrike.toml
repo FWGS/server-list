@@ -263,3 +263,9 @@ address = "16.170.223.249:27015"
 protocol = 48
 contact = "discord:blackwolf82929"
 host = "NECROHAZARD 1.0v"
+
+[[server]]
+address = "42.194.208.166:27016"
+protocol = 48
+contact = "zangyu01@qq.com"
+host = "Team Fortress 2 in CS1.6[ZY Fortress]"
