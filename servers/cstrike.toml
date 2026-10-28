@@ -263,3 +263,9 @@ address = "16.170.223.249:27015"
 protocol = 48
 contact = "discord:blackwolf82929"
 host = "NECROHAZARD 1.0v"
+
+[[server]]
+address = "54.37.94.253:27015"
+protocol = 48
+contact = "sebastian@fanaticservers.ro"
+host = "FANATIC PUBLIC - PUB.FANATICSERVERS.RO"
