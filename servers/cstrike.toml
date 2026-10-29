@@ -265,7 +265,7 @@ contact = "discord:blackwolf82929"
 host = "NECROHAZARD 1.0v"
 
 [[server]]
-address  = "85.123.45.67:27015"
+address  = "13.143.223.13:27015"
 protocol = 49
 contact  = "nenquen@proton.me"
 host     = "Nen's Zombie World"
