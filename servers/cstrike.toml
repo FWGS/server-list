@@ -276,3 +276,9 @@ address  = "89.42.132.204:27015"
 protocol = 48
 contact  = "marcudaniel1337@gmail.com"
 host   = "-[24/7]- CS.DANIELMARCU.COM -> CUSTOM MAPS"
+
+[[server]]
+address  = "51.77.33.55:27021"
+protocol = 48
+contact  = "CubicPioneer@member.fsf.org"
+host     = "Dustora Arena | Dust2 | EU"
