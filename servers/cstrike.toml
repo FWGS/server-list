@@ -29,7 +29,8 @@ host     = "r2d2 [yapb/arm64]"
 
 [[server]]
 address  = "188.212.103.154:27015"
-protocol = 49
+protocol = 48
+contact  = "contact@dinscurt.com"
 host     = "* BIO.DINSCURT.COM | Zombie-Strike"
 
 [[server]]
