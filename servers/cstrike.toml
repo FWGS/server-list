@@ -29,7 +29,8 @@ host     = "r2d2 [yapb/arm64]"
 
 [[server]]
 address  = "188.212.103.154:27015"
-protocol = 49
+protocol = 48
+contact  = "contact@dinscurt.com"
 host     = "* BIO.DINSCURT.COM | Zombie-Strike"
 
 [[server]]
@@ -269,3 +270,19 @@ address  = "13.143.223.13:27015"
 protocol = 49
 contact  = "nenquen@proton.me"
 host     = "Nen's Zombie World"
+address = "42.194.208.166:27016"
+protocol = 48
+contact = "zangyu01@qq.com"
+host = "Team Fortress 2 in CS1.6[ZY Fortress]"
+
+[[server]]
+address  = "89.42.132.204:27015"
+protocol = 48
+contact  = "marcudaniel1337@gmail.com"
+host   = "-[24/7]- CS.DANIELMARCU.COM -> CUSTOM MAPS"
+
+[[server]]
+address  = "51.77.33.55:27021"
+protocol = 48
+contact  = "CubicPioneer@member.fsf.org"
+host     = "Dustora Arena | Dust2 | EU"
