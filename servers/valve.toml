@@ -78,9 +78,9 @@ host = "[New] FreeToPlay "
 
 [[server]]
 address  = "82.67.199.14:27015"
-protocol = 49
+protocol = 48
 contact  = "telegram:@arsongear"
-host     = "WINCOR Headquarters"
+host     = "WINCOR HEADquarTERS!"
 
 
 [[server]]
