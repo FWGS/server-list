@@ -282,3 +282,15 @@ address  = "51.77.33.55:27021"
 protocol = 48
 contact  = "CubicPioneer@member.fsf.org"
 host     = "Dustora Arena | Dust2 | EU"
+
+[[server]]
+address = "176.118.222.43:27016"
+protocol = 48
+contact = "kuro.street.inc@gmail.com"
+host = "Counter Zombie Mobile"
+
+[[server]]
+address = "176.118.222.43:27017"
+protocol = 48
+contact = "kuro.street.inc@gmail.com"
+host = "Counter Zombie Mobile"
