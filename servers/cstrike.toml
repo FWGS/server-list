@@ -282,3 +282,10 @@ address  = "51.77.33.55:27021"
 protocol = 48
 contact  = "CubicPioneer@member.fsf.org"
 host     = "Dustora Arena | Dust2 | EU"
+
+[[server]]
+address = "89.144.35.150:27015"
+protocol = 48
+contact = "akimarkovic711@gmail.com"
+host = "THUNDER [Zombie Escape | CSO | Fast DL | 1000+ FPS]"
+
