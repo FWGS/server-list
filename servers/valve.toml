@@ -1,6 +1,11 @@
 # Auto-populated on 2026-06-05 from old UDP master snapshots
 
 [[server]]
+address  = "halflife.hasanmerkit.com:27015"
+protocol = 48
+contact  = "hasanmerkit@teteos.net, discord:hasanmerkit"
+
+[[server]]
 address  = "51.91.249.12:27017"
 protocol = 49
 host     = "[Lemita]:: HLDM (t.me/lemita_project)"
