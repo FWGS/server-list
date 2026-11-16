@@ -49,6 +49,11 @@ protocol = 49
 host     = "[Lemita]:: TeamPlay"
 
 [[server]]
+address  = "51.91.249.12:27019"
+protocol = 49
+host     = "[Lemita]:: Dust2 Only"
+
+[[server]]
 address  = "72.60.130.39:27015"
 protocol = 49
 host     = "[IceEyes] CLASSIC PUBLIC (rank / vip system)"
