@@ -300,3 +300,8 @@ address = "176.118.222.43:27017"
 protocol = 48
 contact = "kuro.street.inc@gmail.com"
 host = "Counter Zombie Mobile"
+
+[[server]]
+address = "185.147.157.81:27990"
+protocol = 48
+host = "[US/MI] Yet another CS 1.6 server"
