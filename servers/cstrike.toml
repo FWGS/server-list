@@ -306,3 +306,9 @@ address = "176.118.222.43:27017"
 protocol = 48
 contact = "kuro.street.inc@gmail.com"
 host = "Counter Zombie Mobile"
+
+[[server]]
+address  = "2.59.181.187:33156"
+protocol = 48
+contact  = "telegram:@serjanbey777"
+host     = "[TR] NxYFLuX Official Pro Public #2027"
