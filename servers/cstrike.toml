@@ -34,6 +34,12 @@ contact  = "contact@dinscurt.com"
 host     = "* BIO.DINSCURT.COM | Zombie-Strike"
 
 [[server]]
+address  = "163.52.128.130:27015"
+protocol = 48
+contact  = "contact@dinscurt.com"
+host     = "* BIO.DINSCURT.COM | Zombie Infection | Asia"
+
+[[server]]
 address  = "217.154.211.69:27025"
 protocol = 49
 host     = "[CSVR] Classic CS 1.6 VR Server"
