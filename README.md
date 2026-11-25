@@ -48,6 +48,9 @@ to maintainers but never to end users.
   this before will be closed on sight.
 - **`contact` is mandatory for every new entry.** One of:
   - email, e.g. `admin@example.com`
+  - Matrix, as `matrix:@user:example.org`, or a room alias such as `matrix:#room:example.org`
+  - XMPP, as `xmpp:user@example.org`. The `xmpp:` tag is required: without it the address is read as an email.
+  - Fediverse (Mastodon, Pleroma or anything else on ActivityPub), as `fediverse:@user@example.social`. Keep the tag, for the same reason.
   - Discord, as `discord:username` or an invite to a channel where the admin
     can be reached. If the invite expires, or a server-list maintainer gets
     banned from that Discord, the entry is removed (or commented out as a
@@ -55,6 +58,11 @@ to maintainers but never to end users.
   - Telegram, as `telegram:@username` or a group link. Same rule as Discord:
     if the link expires, a maintainer gets banned, or the `@username` is
     unreachable, the entry is removed or commented out.
+
+  Email, Matrix, XMPP and the Fediverse are free and open: where you have
+  the choice, please prefer them. If the platform you use is not listed, say
+  so in your PR; we are open to supporting more.
+
   Multiple contacts in one line are fine:
   `contact = "admin@example.com, discord:foo"`. We won't publish the value,
   but maintainers need a way to reach you when a server starts misbehaving

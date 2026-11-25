@@ -7,6 +7,7 @@
 import argparse
 import collections
 import importlib.util
+import re
 import subprocess
 import sys
 import tomllib
@@ -98,12 +99,17 @@ class Candidate:
 
 	@property
 	def contact(self):
-		return (self.entry.get("contact") or "").strip()
+		return contact_of(self.entry)
+
+def contact_of(entry):
+	raw = entry.get("contact")
+	return raw.strip() if isinstance(raw, str) else raw
 
 def collect_candidates(base, head):
+	"""Returns (entries to probe, entries whose only change is `contact`, invalid)."""
 	base_map = {(g, e["address"]): e for g, es in base.items() for e in es if e.get("address")}
 
-	candidates, invalid = [], []
+	candidates, contact_edits, invalid = [], [], []
 	for gamedir, entries in head.items():
 		for entry in entries:
 			if not entry.get("address"):
@@ -118,7 +124,116 @@ def collect_candidates(base, head):
 			changes = diff_probe_fields(previous, entry)
 			if changes:
 				candidates.append(Candidate(gamedir, entry, ", ".join(changes)))
-	return candidates, invalid
+			elif contact_of(previous) != contact_of(entry):
+				# nothing to probe, but the new contact still has to be usable
+				contact_edits.append(Candidate(gamedir, entry, "`contact` changed"))
+	return candidates, contact_edits, invalid
+
+# --------------------------------------------------------------- contact
+
+# Contributors write these by hand, so spelling is read loosely ("Discord: name",
+# "tg @name", a bare t.me link). What is not negotiable is that every contact
+# says which service it is on: a bare nickname leaves nobody to write to.
+#
+# The free and open services are listed first, because this is the list people
+# are pointed at when their contact is not understood.
+CONTACT_FORMS = [
+	"- email, e.g. `contact = \"admin@example.com\"`",
+	"- Matrix, as `matrix:@user:example.org` or a room alias",
+	"- XMPP, as `xmpp:user@example.org`",
+	"- Fediverse (Mastodon or anything else on ActivityPub), as `fediverse:@user@example.social`",
+	"- Discord, as `discord:username` or a stable invite link",
+	"- Telegram, as `telegram:@username` or a group link",
+]
+
+DOMAIN    = r"[A-Za-z0-9-]+(?:\.[A-Za-z0-9-]+)+"
+MATRIX_ID = rf"[A-Za-z0-9._=/+-]+:{DOMAIN}(?::\d{{1,5}})?"
+
+EMAIL_RE         = re.compile(rf"[A-Za-z0-9._%+-]+@{DOMAIN}")
+MATRIX_RE        = re.compile(rf"(?:[@#]|[ur]/)?{MATRIX_ID}")
+MATRIX_SIGIL_RE  = re.compile(rf"[@#]{MATRIX_ID}")
+MATRIX_LINK_RE   = re.compile(rf"(?:https?://)?matrix\.to/#/(?:[@#]|%40|%23){MATRIX_ID}(?:\?\S*)?", re.I)
+XMPP_RE          = re.compile(rf"[^\s@/]+@{DOMAIN}(?:/[^\s?]+)?(?:\?\S*)?")
+FEDIVERSE_RE     = re.compile(rf"@?[A-Za-z0-9_.-]+@{DOMAIN}")
+FEDIVERSE_AT_RE  = re.compile(rf"@[A-Za-z0-9_.-]+@{DOMAIN}")
+LINK_RE          = re.compile(rf"(?:https?://)?{DOMAIN}/\S+")
+DISCORD_USER_RE  = re.compile(r"@?[A-Za-z0-9_.]{2,32}(?:#\d{1,4})?")
+DISCORD_LINK_RE  = re.compile(r"(?:https?://)?(?:www\.)?(?:discord\.gg|discord(?:app)?\.com/invite)/[A-Za-z0-9-]+/?", re.I)
+TELEGRAM_USER_RE = re.compile(r"@?[A-Za-z][A-Za-z0-9_]{3,31}")
+TELEGRAM_LINK_RE = re.compile(r"(?:https?://)?(?:www\.)?(?:t|telegram)\.me/(?:\+|joinchat/)?[A-Za-z0-9_-]+/?", re.I)
+
+# service -> (what may follow its tag, what to say when something else does)
+SERVICES = {
+	"email": ((EMAIL_RE,), "not a valid email address"),
+	"matrix": ((MATRIX_RE, MATRIX_LINK_RE), "not a Matrix ID or room alias"),
+	"xmpp": ((XMPP_RE,), "not an XMPP address"),
+	"fediverse": ((FEDIVERSE_RE, LINK_RE), "not a Fediverse handle or profile link"),
+	"discord": ((DISCORD_USER_RE, DISCORD_LINK_RE), "not a Discord username or invite link"),
+	"telegram": ((TELEGRAM_USER_RE, TELEGRAM_LINK_RE), "not a Telegram @username or t.me link"),
+}
+TAGS = {
+	**{service: service for service in SERVICES},
+	"e-mail": "email", "mailto": "email",
+	"jabber": "xmpp", "jid": "xmpp",
+	"fedi": "fediverse", "activitypub": "fediverse", "mastodon": "fediverse",
+	"tg": "telegram",
+}
+SERVICE_RE = re.compile(
+	rf"({'|'.join(sorted(map(re.escape, TAGS), key=len, reverse=True))})(?:\s*:\s*|\s+)(.*)", re.I)
+
+# forms that nothing else looks like, so they are understood without a tag
+UNTAGGED = (EMAIL_RE, MATRIX_SIGIL_RE, MATRIX_LINK_RE, FEDIVERSE_AT_RE,
+	DISCORD_LINK_RE, TELEGRAM_LINK_RE)
+
+# "whatsapp: +1...", "signal: +1...": some other service, named the way ours are
+LABELLED_RE = re.compile(r"[A-Za-z][A-Za-z0-9._-]*\s*:\s*\S.*")
+
+# How well one contact is understood. Only a supported one can be used; the
+# other two decide what the contributor is told.
+CONTACT_UNCLEAR     = 0      # nothing says what this is or where it lives
+CONTACT_UNSUPPORTED = 1  # reads as a contact, but not one we can use (yet)
+CONTACT_SUPPORTED   = 2
+
+RATING_NOTES = {
+	CONTACT_UNCLEAR: "cannot tell which service this is on",
+	CONTACT_UNSUPPORTED: "looks like a platform we do not support yet",
+}
+
+def rate_contact(token):
+	"""Rates one contact. Returns (rating, detail).
+
+	`detail` is set only when there is something more exact to say than the
+	rating's own note, e.g. a supported service with a handle that cannot be one.
+	"""
+	m = SERVICE_RE.fullmatch(token)
+	if m:
+		forms, detail = SERVICES[TAGS[m.group(1).lower()]]
+		if any(form.fullmatch(m.group(2)) for form in forms):
+			return CONTACT_SUPPORTED, None
+		return CONTACT_UNSUPPORTED, detail
+
+	if any(form.fullmatch(token) for form in UNTAGGED):
+		return CONTACT_SUPPORTED, None
+	if MATRIX_RE.fullmatch(token):
+		# user:server with no sigil is also what "skype:john.doe" looks like
+		return CONTACT_UNSUPPORTED, (RATING_NOTES[CONTACT_UNSUPPORTED]
+			+ "; if it is a Matrix ID, start it with `@`")
+	if LABELLED_RE.fullmatch(token) or "/" in token:
+		return CONTACT_UNSUPPORTED, None  # some other service, or a link to one
+	if "@" in token[1:]:
+		return CONTACT_UNSUPPORTED, "not a valid email address"
+	return CONTACT_UNCLEAR, None
+
+def unusable_contacts(contact):
+	"""The (contact, rating, detail) of each contact in a `contact` value that
+	is rated below supported."""
+	if not isinstance(contact, str):
+		return [(str(contact), CONTACT_UNCLEAR, "must be a quoted string")]
+	tokens = [t.strip() for t in re.split(r"[,;]", contact)]
+	if not any(tokens):
+		return [(contact, CONTACT_UNCLEAR, "empty")]
+	rated = [(t, *rate_contact(t)) for t in tokens if t]
+	return [r for r in rated if r[1] < CONTACT_SUPPORTED]
 
 # ------------------------------------------------------------ duplicates
 
@@ -157,6 +272,12 @@ def introduces_duplicates(head_dupes, base_dupes):
 
 def md_escape(s):
 	return (s or "").replace("|", "\\|").replace("\n", " ").replace("\r", " ")
+
+def code_span(s, limit=60):
+	# untrusted text bound for a PR comment: inside a code span nothing is a
+	# mention or markup, provided it cannot close the span itself
+	s = " ".join(str(s).split()).replace("`", "'")
+	return f"`{s[:limit] + '…' if len(s) > limit else s}`"
 
 def row(*cells):
 	return "| " + " | ".join(cells) + " |"
@@ -317,23 +438,38 @@ def bad_protocol_lines(candidates):
 		*(f"- `{c.gamedir}` / `{c.address}` declares `protocol = {c.entry.get('protocol')}`"
 			f" — expected {PROTO_GOLDSRC} (GoldSrc) or {PROTO_XASH} (Xash)." for c in bad)]
 
-def missing_contact_lines(candidates):
-	missing = [c for c in candidates if not c.contact]
+def missing_contact_lines(checked):
+	missing = [c for c in checked if not c.contact]
 	if not missing:
 		return []
 	return [
 		"",
 		"### :x: Missing `contact`",
 		"Per the [contribution policy](../blob/main/README.md#contribution-policy), new entries must include a `contact` field so maintainers can reach the operator. Please add one of:",
-		"- email, e.g. `contact = \"admin@example.com\"`",
-		"- Discord, as `discord:username` or a stable invite link",
-		"- Telegram, as `telegram:@username` or a group link",
+		*CONTACT_FORMS,
 		"",
 		"Affected entries:",
 		*(f"- `{c.gamedir}` / `{c.address}`" for c in missing),
 	]
 
-def verdict_lines(head_errs, dupes, invalid, probing, results, rejections, candidates):
+def unrecognized_contact_lines(checked):
+	bad = [(c, token, detail or RATING_NOTES[rating]) for c in checked if c.contact
+		for token, rating, detail in unusable_contacts(c.contact)]
+	if not bad:
+		return []
+	return [
+		"",
+		"### :x: Unrecognized `contact`",
+		"Maintainers have to be able to tell where to write to, so per the [contribution policy](../blob/main/README.md#contribution-policy) every contact must be one of:",
+		*CONTACT_FORMS,
+		"",
+		"Several contacts are fine, separated by commas. Affected entries:",
+		*(f"- `{c.gamedir}` / `{c.address}`: {code_span(token)} — {why}" for c, token, why in bad),
+		"",
+		"Where you have the choice, we would rather reach you on a free and open service: email, Matrix, XMPP or the Fediverse. We are also open to supporting more platforms: if yours is missing from the list, tell us in this PR which one it is. Until it is supported, please also give one of the forms above.",
+	]
+
+def verdict_lines(head_errs, dupes, invalid, probing, results, rejections, checked):
 	"""One line at the top saying whether this can be merged, and if not, why.
 
 	The table below it has the detail; this exists so the decision can be made
@@ -351,9 +487,12 @@ def verdict_lines(head_errs, dupes, invalid, probing, results, rejections, candi
 		label, _ = entry_fault(c, results.get((c.address, c.protocol)), rejections.get(c.address))
 		if label:
 			faults[label] += 1
-	missing = sum(1 for c in candidates if not c.contact)
+	missing = sum(1 for c in checked if not c.contact)
 	if missing:
 		faults["missing `contact`"] += missing
+	unrecognized = sum(1 for c in checked if c.contact and unusable_contacts(c.contact))
+	if unrecognized:
+		faults["unrecognized `contact`"] += unrecognized
 
 	if not faults:
 		n = len(probing)
@@ -391,7 +530,9 @@ def main():
 
 	head_dupes = find_duplicates(head)
 	base_dupes = find_duplicates(base)
-	candidates, invalid = collect_candidates(base, head)
+	candidates, contact_edits, invalid = collect_candidates(base, head)
+	# the contact rules cover everything the PR adds, plus any contact it rewrites
+	contact_checked = candidates + contact_edits
 
 	probe = import_probe(args.probe_script)
 	rejections = {c.address: why for c in candidates
@@ -401,7 +542,7 @@ def main():
 
 	lines = [COMMENT_MARKER, "## Server list PR validation", ""]
 	lines += verdict_lines(head_errs, head_dupes, invalid, probing, results,
-		rejections, candidates)
+		rejections, contact_checked)
 	lines += parse_error_lines(head_errs)
 	lines += duplicate_lines(head_dupes, base_dupes)
 	lines += probe_lines(probing, skipped, len(candidates), results, rejections,
@@ -409,7 +550,8 @@ def main():
 	lines += invalid_lines(invalid)
 	lines += non_public_lines(rejections)
 	lines += bad_protocol_lines(candidates)
-	lines += missing_contact_lines(candidates)
+	lines += missing_contact_lines(contact_checked)
+	lines += unrecognized_contact_lines(contact_checked)
 	lines += ["", "---", FOOTER]
 
 	emit(lines, args.out)

@@ -2,7 +2,7 @@
 """scripts/validate-pr.py"""
 
 import unittest
-from harness import TestCase, git, make_repo, run_validator
+from harness import TestCase, git, load_script, make_repo, run_validator
 
 LIVE = {"protocol": 49, "host": "Test Server", "gamedir": "cstrike", "numcl": 1}
 LIVE48 = {"protocol": 48, "host": "GoldSrc", "gamedir": "cstrike", "numcl": 1}
@@ -168,6 +168,187 @@ class TestPolicy(ValidatorCase):
 		head = git(repo, "rev-parse", "HEAD")
 		r = run_validator(repo, base, head, tmp=self.tmp)
 		self.assertIn("TOML parse errors", r.stdout)
+
+class TestContactForms(unittest.TestCase):
+	# every spelling already merged into servers/ has to keep passing
+	USABLE = [
+		"admin@example.invalid",
+		"first.last+tag@mail.example.invalid",
+		"discord:some_user",
+		"Discord: Some.User",
+		"discord:olduser#1234",
+		"https://discord.gg/AbCdEf123",
+		"discord: discord.com/invite/some-server",
+		"telegram:@some_user",
+		"telegram: someuser",
+		"tg:@some_user",
+		"t.me/some_user",
+		"https://t.me/+AbCdEf123",
+		"mailto:admin@example.invalid",
+		# Matrix: the sigil is enough, the tag makes it optional
+		"@some_user:example.invalid",
+		"#some_room:example.invalid",
+		"matrix:@some_user:example.invalid",
+		"Matrix: some_user:example.invalid:8448",
+		"matrix:u/some_user:example.invalid",
+		"https://matrix.to/#/@some_user:example.invalid",
+		# XMPP: only with a tag
+		"xmpp:some_user@example.invalid",
+		"jabber: some_user@example.invalid",
+		"xmpp:some_room@conference.example.invalid?join",
+		# Fediverse: a tag, or the @ in front
+		"fediverse:@some_user@suya.place",
+		"mastodon: some_user@idtech.space",
+		"activitypub:@some_user@suya.place",
+		"fediverse: https://idtech.space/@some_user",
+		"@some_user@suya.place",
+		"admin@example.invalid, discord:some_user",
+		"t.me/some_user , discord: some.user",
+		"admin@example.invalid; telegram:@some_user",
+	]
+
+	# contact -> (rating, detail)
+	UNCLEAR, UNSUPPORTED, SUPPORTED = 0, 1, 2
+	UNUSABLE = {
+		# nothing to go on
+		"phantomx_admin": (UNCLEAR, None),
+		"@some_user": (UNCLEAR, None),
+		"10000000000": (UNCLEAR, None),
+		",": (UNCLEAR, "empty"),
+		12345: (UNCLEAR, "must be a quoted string"),
+		# a contact, but on a platform that is not supported
+		"whatsapp: +10000000000": (UNSUPPORTED, None),
+		"signal: some_user.01": (UNSUPPORTED, None),
+		"example.invalid/some_user": (UNSUPPORTED, None),
+		"https://suya.place/@some_user": (UNSUPPORTED, None),  # a profile link needs the tag
+		# a supported platform, but not a handle on it
+		"admin@example": (UNSUPPORTED, "not a valid email address"),
+		"email: some_user": (UNSUPPORTED, "not a valid email address"),
+		"matrix: some_user": (UNSUPPORTED, "not a Matrix ID or room alias"),
+		# without sigil or tag, a Matrix ID is any "service:name" pair
+		"some_user:example.invalid": (UNSUPPORTED,
+			"looks like a platform we do not support yet; if it is a Matrix ID, start it with `@`"),
+		"xmpp: some_user": (UNSUPPORTED, "not an XMPP address"),
+		"fediverse: some_user": (UNSUPPORTED, "not a Fediverse handle or profile link"),
+		"discord: some user": (UNSUPPORTED, "not a Discord username or invite link"),
+		"telegram: +10000000000": (UNSUPPORTED, "not a Telegram @username or t.me link"),
+	}
+
+	def setUp(self):
+		self.validator = load_script("validate-pr")
+
+	def test_forms_in_use_are_supported(self):
+		for contact in self.USABLE:
+			with self.subTest(contact=contact):
+				self.assertEqual(self.validator.unusable_contacts(contact), [])
+
+	def test_single_supported_contact_rates_two(self):
+		self.assertEqual(self.validator.rate_contact("Discord: Some.User"), (self.SUPPORTED, None))
+
+	def test_unusable_forms_are_rated(self):
+		for contact, expected in self.UNUSABLE.items():
+			with self.subTest(contact=contact):
+				faults = self.validator.unusable_contacts(contact)
+				self.assertEqual([(rating, detail) for _, rating, detail in faults], [expected])
+
+	def test_rating_names_match_the_scale(self):
+		v = self.validator
+		self.assertEqual((v.CONTACT_UNCLEAR, v.CONTACT_UNSUPPORTED, v.CONTACT_SUPPORTED),
+			(self.UNCLEAR, self.UNSUPPORTED, self.SUPPORTED))
+
+	def test_only_the_bad_contact_of_several_is_named(self):
+		faults = self.validator.unusable_contacts("admin@example.invalid, some_user")
+		self.assertEqual([token for token, _, _ in faults], ["some_user"])
+
+class TestContactPolicy(ValidatorCase):
+	def test_bare_nickname_is_flagged(self):
+		r = self.validate({"cstrike": []},
+			{"cstrike": [entry("1.1.1.1:27015", contact="phantomx_admin")]},
+			fixture={"1.1.1.1:27015": LIVE})
+		self.assertIn("Unrecognized `contact`", r.stdout)
+		self.assertIn("- `cstrike` / `1.1.1.1:27015`: `phantomx_admin` — cannot tell which service this is on", r.stdout)
+		self.assertIn(":x: **Not ready** — 1 problem: 1 unrecognized `contact`.", r.stdout)
+		self.assertNotIn("Missing `contact`", r.stdout)
+		self.assertEqual(r.code, 0)
+
+	def test_unsupported_platform_is_flagged_as_such(self):
+		r = self.validate({"cstrike": []},
+			{"cstrike": [entry("1.1.1.1:27015", contact="whatsapp: +10000000000")]},
+			fixture={"1.1.1.1:27015": LIVE})
+		self.assertIn("`whatsapp: +10000000000` — looks like a platform we do not support yet", r.stdout)
+		self.assertIn("1 unrecognized `contact`", r.stdout)
+
+	def test_unparsed_contact_invites_a_request_for_the_platform(self):
+		for contact in ("phantomx_admin", "whatsapp: +10000000000", "discord: some user"):
+			with self.subTest(contact=contact):
+				r = self.validate({"cstrike": []},
+					{"cstrike": [entry("1.1.1.1:27015", contact=contact)]},
+					fixture={"1.1.1.1:27015": LIVE})
+				self.assertIn("open to supporting more platforms", r.stdout)
+				self.assertIn("a free and open service: email, Matrix, XMPP or the Fediverse", r.stdout)
+
+	def test_missing_contact_gets_no_platform_invitation(self):
+		r = self.validate({"cstrike": []},
+			{"cstrike": [{"address": "1.1.1.1:27015", "protocol": 49}]},
+			fixture={"1.1.1.1:27015": LIVE})
+		self.assertNotIn("more platforms", r.stdout)
+
+	def test_open_services_are_offered_before_the_closed_ones(self):
+		for contact in ("", "phantomx_admin"):
+			with self.subTest(contact=contact):
+				r = self.validate({"cstrike": []},
+					{"cstrike": [entry("1.1.1.1:27015", contact=contact)]},
+					fixture={"1.1.1.1:27015": LIVE})
+				offered = [l.split(",")[0] for l in r.stdout.splitlines() if l.startswith("- ") and ", " in l and "`cstrike`" not in l]
+				self.assertEqual(offered, ["- email", "- Matrix", "- XMPP",
+					"- Fediverse (Mastodon or anything else on ActivityPub)", "- Discord", "- Telegram"])
+
+	def test_free_service_contacts_are_ready_to_merge(self):
+		for contact in ("@some_user:example.invalid", "xmpp:some_user@example.invalid",
+				"fediverse:@some_user@idtech.space"):
+			with self.subTest(contact=contact):
+				r = self.validate({"cstrike": []},
+					{"cstrike": [entry("1.1.1.1:27015", contact=contact)]},
+					fixture={"1.1.1.1:27015": LIVE})
+				self.assertIn("Ready to merge", r.stdout)
+
+	def test_recognized_contact_is_not_mentioned(self):
+		r = self.validate({"cstrike": []},
+			{"cstrike": [entry("1.1.1.1:27015", contact="Discord: Some.User, t.me/some_user")]},
+			fixture={"1.1.1.1:27015": LIVE})
+		self.assertIn("Ready to merge", r.stdout)
+		self.assertNotIn("contact", r.stdout)
+
+	def test_contact_rewritten_on_an_existing_entry_is_checked(self):
+		r = self.validate(
+			{"cstrike": [entry("1.1.1.1:27015")]},
+			{"cstrike": [entry("1.1.1.1:27015", contact="some_user")]})
+		self.assertIn("No entry needs probing", r.stdout)
+		self.assertIn("1 unrecognized `contact`", r.stdout)
+
+	def test_contact_removed_from_an_existing_entry_is_flagged(self):
+		r = self.validate(
+			{"cstrike": [entry("1.1.1.1:27015")]},
+			{"cstrike": [{"address": "1.1.1.1:27015", "protocol": 49}]})
+		self.assertIn("1 missing `contact`", r.stdout)
+
+	def test_contact_already_on_the_base_branch_is_left_alone(self):
+		r = self.validate(
+			{"cstrike": [entry("1.1.1.1:27015", contact="some_user", host="Old name")]},
+			{"cstrike": [entry("1.1.1.1:27015", contact="some_user", host="New name")]})
+		self.assertIn("Nothing to verify", r.stdout)
+
+	def test_contact_cannot_inject_markup_into_the_comment(self):
+		r = self.validate({"cstrike": []},
+			{"cstrike": [entry("1.1.1.1:27015", contact="x` @someone <b>`")]},
+			fixture={"1.1.1.1:27015": LIVE})
+		self.assertIn("`x' @someone <b>'` — ", r.stdout)
+
+	def test_contact_that_is_not_a_string_is_flagged(self):
+		r = self.validate({"cstrike": []},
+			{"cstrike": [entry("1.1.1.1:27015", contact=12345)]},
+			fixture={"1.1.1.1:27015": LIVE})
+		self.assertIn("`12345` — must be a quoted string", r.stdout)
 
 class TestVerdict(ValidatorCase):
 	def test_clean_pr_says_ready_to_merge(self):
