@@ -36,14 +36,15 @@ def probe_batch(query_bin, addresses, timeout, protocol):
 	try:
 		out = subprocess.run(cmd, capture_output=True, text=True, timeout=timeout + 5)
 	except subprocess.TimeoutExpired:
-		return {}
-
-	if not out.stdout.strip():
+		print(f"  [!] query timed out, {len(addresses)} servers counted as silent", flush=True)
 		return {}
 
 	try:
 		doc = json.loads(out.stdout)
 	except json.JSONDecodeError:
+		# a failed query must not pass for a batch of silent servers unnoticed
+		error = out.stderr.strip() or f"exit code {out.returncode}, no output"
+		print(f"  [!] query failed, {len(addresses)} servers counted as silent: {error}", flush=True)
 		return {}
 
 	live = {}
