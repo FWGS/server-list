@@ -1,0 +1,87 @@
+probing 76 servers across 8 gamedirs  (timeout=6s, grace=48.0h)
+  [+]      cstrike  by.ctymc.cn:20977 -> 222.187.254.123:20977  ping=191.77ms  players=0
+  [+]      cstrike  by.ctymc.cn:20916 -> 222.187.254.123:20916  ping=207.276ms  players=1
+  [+]      cstrike  119.91.201.9:27015  ping=178.32ms  players=0
+  [-]      cstrike  167.235.7.101:27015  silent (last seen 73.0h ago)
+  [+]      cstrike  185.189.167.10:27015  ping=165.825ms  players=0
+  [+]      cstrike  188.212.103.154:27015  ping=190.353ms  players=23
+  [+]      cstrike  163.52.128.130:27015  ping=180.197ms  players=3
+  [-]      cstrike  217.154.211.69:27025  silent (last seen 1865.0h ago)
+  [+]      cstrike  51.91.249.12:27015  ping=159.361ms  players=6
+  [+]      cstrike  51.91.249.12:27016  ping=156.773ms  players=5
+  [-]      cstrike  72.60.130.39:27015  silent (last seen 983.3h ago)
+  [+]      cstrike  82.77.209.165:27015  ping=170.283ms  players=6
+  [+]      cstrike  82.77.209.92:27015  ping=171.295ms  players=5
+  [+]      cstrike  82.77.209.95:27015  ping=179.483ms  players=7
+  [+]      cstrike  82.77.209.96:27015  ping=170.101ms  players=4
+  [+]      cstrike  89.207.221.227:27015  ping=208.642ms  players=7
+  [+]      cstrike  186.19.63.56:27015  ping=226.803ms  players=0
+  [+]      cstrike  5.196.165.2:27015  ping=142.988ms  players=18
+  [+]      cstrike  131.196.196.196:27020  ping=168.438ms  players=30
+  [-]      cstrike  136.110.10.31:27015  silent (last seen 1629.9h ago)
+  [-]      cstrike  168.222.251.98:6610  silent
+  [-]      cstrike  168.222.251.98:4728  silent
+  [-]      cstrike  193.111.78.158:27015  silent
+  [-]      cstrike  89.221.220.61:27017  silent (last seen 199.6h ago)
+  [+]      cstrike  104.234.65.245:27300  ping=168.388ms  players=8
+  [-]      cstrike  131.196.199.248:27015  silent (last seen 1069.4h ago)
+  [-]      cstrike  178.63.182.108:5606  silent
+  [+]      cstrike  9950x.mc5173.cn:27018 -> 202.189.9.244:27018  ping=313.644ms  players=2
+  [-]      cstrike  91.151.88.240:27015  silent (last seen 1891.9h ago)
+  [-]      cstrike  132.243.253.240:2253  silent
+  [+]      cstrike  81.181.244.5:27015  ping=152.177ms  players=28
+  [-]      cstrike  185.84.160.19:27015  silent (last seen 1107.8h ago)
+  [-]      cstrike  185.84.160.19:27119  silent (last seen 1107.8h ago)
+  [-]      cstrike  185.84.160.19:27215  silent (last seen 1107.8h ago)
+  [-]      cstrike  94.156.11.186:27020  silent (last seen 981.9h ago)
+  [+]      cstrike  89.39.161.172:27015  ping=167.338ms  players=9
+  [~]      cstrike  177.54.201.194:27015  silent now, last seen 0.2h ago (grace)
+  [~]      cstrike  177.54.201.194:27016  silent now, last seen 0.2h ago (grace)
+  [+]      cstrike  177.54.201.194:27017  ping=178.409ms  players=1
+  [+]      cstrike  177.54.201.194:27018  ping=178.042ms  players=0
+  [+]      cstrike  177.54.201.194:27019  ping=178.718ms  players=2
+  [+]      cstrike  177.54.201.194:27020  ping=178.66ms  players=0
+  [+]      cstrike  177.54.201.194:27021  ping=179.25ms  players=0
+  [+]      cstrike  177.54.201.194:27022  ping=179.392ms  players=1
+  [+]      cstrike  177.54.201.194:27023  ping=179.004ms  players=0
+  [+]      cstrike  177.54.201.194:27024  ping=178.984ms  players=0
+  [+]      cstrike  16.170.223.249:27015  ping=173.633ms  players=0
+  [+]      cstrike  42.194.208.166:27015  ping=179.977ms  players=16
+  [+]      cstrike  89.42.132.204:27015  ping=184.055ms  players=14
+  [+]      cstrike  51.77.33.55:27021  ping=168.385ms  players=7
+  [+]      cstrike  89.144.35.150:27015  ping=149.257ms  players=3
+  [-]      cstrike  176.118.222.43:27016  silent (last seen 95.0h ago)
+  [-]      cstrike  176.118.222.43:27017  silent (last seen 87.4h ago)
+  [+]      cstrike  2.59.181.187:33156  ping=177.14ms  players=0
+  -> output/v1/servers/cstrike  (36 published)
+  [-]        czero  89.221.220.61:27018  silent (last seen 199.6h ago)
+  -> output/v1/servers/czero  (0 published)
+  [-]    diffusion  2.56.177.172:27015  silent
+  [-]    diffusion  84.22.154.218:27016  silent (last seen 2290.0h ago)
+  -> output/v1/servers/diffusion  (0 published)
+  [-]          dmc  89.221.220.61:27020  silent (last seen 199.6h ago)
+  -> output/v1/servers/dmc  (0 published)
+  [-]          dod  89.221.220.61:27022  silent (last seen 199.6h ago)
+  -> output/v1/servers/dod  (0 published)
+  [-]      gearbox  89.221.220.61:27019  silent (last seen 199.6h ago)
+  -> output/v1/servers/gearbox  (0 published)
+  [+]          tfc  ganymede.workbench.network:27018 -> 135.181.160.44:27018  ping=170.325ms  players=0
+  [-]          tfc  89.221.220.61:27021  silent (last seen 199.6h ago)
+  -> output/v1/servers/tfc  (1 published)
+  [+]        valve  halflife.hasanmerkit.com:27015 -> 104.239.127.57:27015  ping=189.887ms  players=6
+  [-]        valve  51.91.249.12:27017  silent (last seen 138.9h ago)
+  [-]        valve  2.26.26.83:27015  silent (last seen 841.2h ago)
+  [+]        valve  94.138.138.9:27015  ping=197.099ms  players=0
+  [+]        valve  94.138.138.9:27016  ping=195.694ms  players=2
+  [+]        valve  94.138.138.9:27017  ping=239.08ms  players=0
+  [-]        valve  45.154.199.157:27015  silent (last seen 975.6h ago)
+  [-]        valve  45.154.199.157:27016  silent (last seen 975.6h ago)
+  [-]        valve  89.221.220.61:27016  silent (last seen 199.6h ago)
+  [+]        valve  72.34.103.90:27015  ping=22.63ms  players=0
+  [-]        valve  57.129.154.247:27015  silent (last seen 1085.3h ago)
+  [-]        valve  play.agcs.2bd.net:27015  silent (last seen 1175.9h ago)
+  [+]        valve  82.67.199.14:27015  ping=157.935ms  players=0
+  [+]        valve  82.146.32.88:27015  ping=244.579ms  players=0
+  -> output/v1/servers/valve  (7 published)
+  -> output/v1/gamedirs
+done: 42 responded, 2 kept by grace, 0 pruned from state, 0 old samples dropped
